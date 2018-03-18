@@ -44,12 +44,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.cedarsoft.serialization</groupId>
-            <artifactId>jackson</artifactId>
-            <version>7.2.0</version>
-        </dependency>
     </dependencies>
 
     <build>

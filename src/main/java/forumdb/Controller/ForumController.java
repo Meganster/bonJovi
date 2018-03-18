@@ -4,85 +4,74 @@ import forumdb.DAO.ForumDAO;
 import forumdb.DAO.ThreadDAO;
 import forumdb.DAO.UserDAO;
 import forumdb.Model.Forum;
-import forumdb.Model.Thread;
 import forumdb.Model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 @RestController
 public class ForumController {
     @Autowired
-    private ForumDAO forumTemplate;
+    private ForumDAO forumService;
     @Autowired
-    private UserDAO userTemplate;
+    private UserDAO userService;
     @Autowired
-    private ThreadDAO threadTemplate;
+    private ThreadDAO threadService;
 
     @PostMapping(value = "/api/forum/create")
-    public Forum createForum(@RequestBody Forum forum, HttpServletResponse response) {
+    public ResponseEntity<?> createForum(@RequestBody Forum forum) {
         try {
-            final Forum existForum = forumTemplate.getForum(forum.getSlug());
-            response.setStatus(HttpServletResponse.SC_CONFLICT);
-            return existForum;
-        } catch (DataAccessException error) {
+            final Forum existForum = forumService.getForum(forum.getSlug());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(existForum);
+        } catch (DataAccessException errorFirst) {
             try {
-                final User existUser = userTemplate.getUser(forum.getUser());
+                final User existUser = userService.getUser(forum.getUser());
 
-                forumTemplate.create(forum.getTitle(), existUser.getNickname(), forum.getSlug());
-                response.setStatus(HttpServletResponse.SC_CREATED);
-                return forumTemplate.getForum(forum.getSlug());
-            } catch (DataAccessException error1) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return null;
+                forumService.create(forum.getTitle(), existUser.getNickname(), forum.getSlug());
+                return ResponseEntity.status(HttpStatus.CREATED).body(forumService.getForum(forum.getSlug()));
+            } catch (DataAccessException errorSecond) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user with nickname: " + forum.getUser()));
             }
         }
     }
 
     @GetMapping(value = "api/forum/{slug}/details")
-    public Forum getForum(@PathVariable("slug") String slug, HttpServletResponse response) {
+    public ResponseEntity<?> getForum(@PathVariable("slug") String slug) {
         try {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return forumTemplate.getForum(slug);
+            return ResponseEntity.status(HttpStatus.OK).body(forumService.getForum(slug));
         } catch (DataAccessException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + slug));
         }
     }
 
     @GetMapping(value = "api/forum/{slug}/threads")
-    public List<Thread> getThreads(@PathVariable("slug") String forumSlug,
-                                   @RequestParam(value = "since", defaultValue = "") String since,
-                                   @RequestParam(value = "limit", defaultValue = "0") Integer limit,
-                                   @RequestParam(value = "desc", defaultValue = "false") Boolean desc,
-                                   HttpServletResponse response) {
+    public ResponseEntity<?> getThreads(@PathVariable("slug") String forumSlug,
+                                        @RequestParam(value = "since", defaultValue = "") String since,
+                                        @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                        @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
         try {
-            forumTemplate.getForum(forumSlug);
+            forumService.getForum(forumSlug);
         } catch (DataAccessException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + forumSlug));
         }
 
-        return threadTemplate.getThreads(forumSlug, limit, since, desc);
+        return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreads(forumSlug, limit, since, desc));
     }
 
     @GetMapping(value = "api/forum/{slug}/users")
-    public List<User> getUsers(@PathVariable String slug,
-                               @RequestParam(value = "limit", defaultValue = "0") Integer limit,
-                               @RequestParam(value = "desc", defaultValue = "false") Boolean desc,
-                               @RequestParam(value = "since", defaultValue = "") String since,
-                               HttpServletResponse response) {
+    public ResponseEntity<?> getUsers(@PathVariable String slug,
+                                      @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                      @RequestParam(value = "desc", defaultValue = "false") Boolean desc,
+                                      @RequestParam(value = "since", defaultValue = "") String since) {
         try {
-            forumTemplate.getForum(slug);
+            forumService.getForum(slug);
         } catch (DataAccessException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find forum with slug: " + slug));
         }
 
-
-        return forumTemplate.getUsers(slug, limit, since, desc);
+        return ResponseEntity.status(HttpStatus.OK).body(forumService.getUsers(slug, limit, since, desc));
     }
 }

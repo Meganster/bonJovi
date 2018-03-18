@@ -10,19 +10,19 @@ import forumdb.Model.User;
 import forumdb.Model.Vote;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
 
 
 @RestController
 public class ThreadController {
     @Autowired
-    ThreadDAO threadTemplate;
+    ThreadDAO threadService;
     @Autowired
-    ForumDAO forumTemplate;
+    ForumDAO forumService;
     @Autowired
-    UserDAO userTemplate;
+    UserDAO userService;
 
     @RequestMapping("/")
     public String index() {
@@ -30,102 +30,94 @@ public class ThreadController {
     }
 
     @PostMapping(value = "/api/forum/{slug}/create")
-    public Thread createThread(@PathVariable("slug") String slug, @RequestBody Thread thread, HttpServletResponse response){
-        User user;
+    public ResponseEntity<?> createThread(@PathVariable("slug") String slug, @RequestBody Thread thread) {
         Forum forum;
 
-        try{
-            forum = forumTemplate.getForum(slug);
-            user = userTemplate.getUser(thread.getAuthor());
-        }catch (DataAccessException error){
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+        try {
+            forum = forumService.getForum(slug);
+            final User user = userService.getUser(thread.getAuthor());
+        } catch (DataAccessException error) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread author by nickname: " + thread.getAuthor()));
         }
 
         try {
             thread.setForum(forum.getSlug());
-            threadTemplate.createThread(thread);
-            response.setStatus(HttpServletResponse.SC_CREATED);
-            forumTemplate.upNumberOfThreads(forum.getSlug());
-            return threadTemplate.getThread(thread.getAuthor(), slug, thread.getTitle());
+            threadService.createThread(thread);
+            forumService.upNumberOfThreads(forum.getSlug());
+            return ResponseEntity.status(HttpStatus.CREATED).body(threadService.getThread(thread.getAuthor(), slug, thread.getTitle()));
         } catch (DataAccessException error) {
-            Thread existThread = threadTemplate.getThread(thread.getSlug());
-            response.setStatus(HttpServletResponse.SC_CONFLICT);
-            return existThread;
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThread(thread.getSlug()));
         }
     }
 
     @PostMapping(value = "/api/thread/{slug_or_id}/vote")
-    public Thread voteForThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Vote vote, HttpServletResponse response) {
+    public ResponseEntity<?> voteForThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Vote vote) {
 
-        Thread thread = threadTemplate.getThreadSlugOrId(slugOrId);
+        Thread thread = threadService.getThreadSlugOrId(slugOrId);
         if (thread == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
 
         try {
-            User user = userTemplate.getUser(vote.getNickname());
-            Integer voteStatus = threadTemplate.getVote(user.getId(), thread.getId());
-            if(voteStatus == null) {
+            final User user = userService.getUser(vote.getNickname());
+            Integer voteStatus = threadService.getVote(user.getId(), thread.getId());
+            if (voteStatus == null) {
                 voteStatus = 0;
             }
 
-            switch(voteStatus) {
-                case 0: switch (vote.getVoice()) {
-                            case 1:
-                                threadTemplate.vote(thread.getId(), user.getId(),1, voteStatus);
-                                break;
-                            case -1:
-                                threadTemplate.vote(thread.getId(), user.getId(),-1, voteStatus);
-                                break;
-                        }
-                        break;
+            switch (voteStatus) {
+                case 0:
+                    switch (vote.getVoice()) {
+                        case 1:
+                            threadService.vote(thread.getId(), user.getId(), 1, voteStatus);
+                            break;
+                        case -1:
+                            threadService.vote(thread.getId(), user.getId(), -1, voteStatus);
+                            break;
+                    }
+                    break;
 
-                case 1: if(vote.getVoice() == -1){
-                            threadTemplate.vote(thread.getId(), user.getId(),-2, voteStatus);
-                        }
-                        break;
-                case -1: if(vote.getVoice() == 1){
-                            threadTemplate.vote(thread.getId(), user.getId(),2, voteStatus);
-                         }
-                         break;
+                case 1:
+                    if (vote.getVoice() == -1) {
+                        threadService.vote(thread.getId(), user.getId(), -2, voteStatus);
+                    }
+                    break;
+                case -1:
+                    if (vote.getVoice() == 1) {
+                        threadService.vote(thread.getId(), user.getId(), 2, voteStatus);
+                    }
+                    break;
             }
 
-            response.setStatus(HttpServletResponse.SC_OK);
-            return threadTemplate.getThread(thread.getSlug());
-
+            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThread(thread.getSlug()));
         } catch (DataAccessException e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + thread.getAuthor()));
         }
     }
 
     @GetMapping(value = "api/thread/{slug_or_id}/details")
-    public Thread getDetails(@PathVariable("slug_or_id") String slugOrId, HttpServletResponse response) {
-        Thread thread = threadTemplate.getThreadSlugOrId(slugOrId);
+    public ResponseEntity<?> getDetails(@PathVariable("slug_or_id") String slugOrId) {
+        Thread thread = threadService.getThreadSlugOrId(slugOrId);
         if (thread == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        } else{
-            response.setStatus(HttpServletResponse.SC_OK);
-            return thread;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(thread);
         }
     }
 
     @PostMapping(value = "api/thread/{slug_or_id}/details")
-    public Thread updateThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Thread changedThread, HttpServletResponse response) {
-        Thread thread = threadTemplate.getThreadSlugOrId(slugOrId);
+    public ResponseEntity<?> updateThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Thread changedThread) {
+        Thread thread = threadService.getThreadSlugOrId(slugOrId);
         if (thread == null) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
 
-        if(thread.getTitle() == changedThread.getTitle() &&
-                thread.getMessage() == changedThread.getMessage())
-            return thread;
+        if (thread.getTitle() == changedThread.getTitle() &&
+                thread.getMessage() == changedThread.getMessage()) {
+            return ResponseEntity.status(HttpStatus.OK).body(thread);
+        }
 
-        threadTemplate.update(thread.getId(), changedThread);
-        return threadTemplate.getThreadID(thread.getId());
+        threadService.update(thread.getId(), changedThread);
+        return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadID(thread.getId()));
     }
 }

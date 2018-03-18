@@ -26,8 +26,7 @@ public class ForumDAO {
 
     public Forum getForum(String slug) throws DataAccessException {
         String sql = "SELECT * FROM Forum WHERE slug = ?::citext";
-        Forum forum = jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ForumMapper());
-        return forum;
+        return jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ForumMapper());
     }
 
     public void upNumberOfThreads(String slug) {
@@ -43,15 +42,15 @@ public class ForumDAO {
     public List<User> getUsers(String slugForum, Integer limit, String since, Boolean desc) {
         //TODO rewrite sql (???)
         StringBuilder sql = new StringBuilder("SELECT * FROM \"User\" WHERE \"User\".nickname IN " +
-                "(SELECT POST.author FROM POST WHERE POST.forum='"+ slugForum +"'::citext " +
+                "(SELECT POST.author FROM POST WHERE POST.forum='" + slugForum + "'::citext " +
                 "UNION " +
-                "SELECT Thread.author FROM Thread WHERE Thread.forum='"+ slugForum +"'::citext)");
+                "SELECT Thread.author FROM Thread WHERE Thread.forum='" + slugForum + "'::citext)");
 
         if (!since.isEmpty()) {
             if (desc == true) {
-                sql.append(" AND \"User\".nickname < '"+ since +"'::citext");
+                sql.append(" AND \"User\".nickname < '" + since + "'::citext");
             } else {
-                sql.append(" AND \"User\".nickname > '"+ since +"'::citext");
+                sql.append(" AND \"User\".nickname > '" + since + "'::citext");
             }
         }
 

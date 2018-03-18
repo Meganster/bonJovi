@@ -14,58 +14,56 @@ import java.util.ArrayList;
 
 @Repository
 public class UserDAO {
+    final static Integer EMPTY_SQL_STRING_LENGTH = 17;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public void create(String email, String nickname, String fullname, String about) throws DataAccessException {
-        String sql = "INSERT INTO \"User\" (email, nickname, fullname, about) VALUES (?, ?, ?, ?)";
+        final String sql = "INSERT INTO \"User\" (email, nickname, fullname, about) VALUES (?, ?, ?, ?)";
         jdbcTemplate.update(sql, email, nickname, fullname, about);
     }
 
     public void updateProfile(String email, String fullname, String about, String nickname) throws DataAccessException {
-        Boolean conditionEmail = email!=null && !email.isEmpty();
-        Boolean conditionAbout = about!=null && !about.isEmpty();
-        Boolean conditionFullname = fullname!=null && !fullname.isEmpty();
+        final Boolean conditionEmail = email != null && !email.isEmpty();
+        final Boolean conditionAbout = about != null && !about.isEmpty();
+        final Boolean conditionFullname = fullname != null && !fullname.isEmpty();
 
-        StringBuilder sql = new StringBuilder("UPDATE \"User\" SET");
+        final StringBuilder sql = new StringBuilder("UPDATE \"User\" SET");
 
-            if(conditionEmail){
-                sql.append(" email='" + email +"'::citext");
+        if (conditionEmail) {
+            sql.append(" email='" + email + "'::citext");
+        }
+
+        if (conditionAbout) {
+            if (conditionEmail) {
+                sql.append(',');
             }
+            sql.append(" about='" + about + "'");
+        }
 
-            if(conditionAbout){
-                if(conditionEmail){
-                    sql.append(",");
-                }
-                sql.append(" about='" + about + "'");
+        if (conditionFullname) {
+            if (sql.length() > EMPTY_SQL_STRING_LENGTH) {
+                sql.append(',');
             }
+            sql.append(" fullname='" + fullname + "'");
+        }
 
-            if(conditionFullname){
-                if(sql.length() > 17) {
-                    sql.append(",");
-                }
-                sql.append(" fullname='" + fullname + "'");
-            }
-
-            if(sql.length() > 17) {
-                sql.append(" WHERE nickname='" + nickname + "'::citext;");
-                //System.out.print("\n\n" + sql.toString() + "\n\n");
-                jdbcTemplate.update(sql.toString());
-            }
+        if (sql.length() > EMPTY_SQL_STRING_LENGTH) {
+            sql.append(" WHERE nickname='" + nickname + "'::citext;");
+            jdbcTemplate.update(sql.toString());
+        }
     }
 
     public User getUser(String nickname) throws DataAccessException {
-        String sql = "SELECT * FROM \"User\" WHERE nickname = ?::citext";
-        User user = jdbcTemplate.queryForObject(sql, new Object[]{nickname}, new UserMapper());
-        return user;
+        final String sql = "SELECT * FROM \"User\" WHERE nickname = ?::citext";
+        return jdbcTemplate.queryForObject(sql, new Object[]{nickname}, new UserMapper());
     }
 
     public ArrayList<User> getUsers(String nickname, String email) throws DataAccessException {
-        String sql = "SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext";
+        final String sql = "SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext";
 
-        ArrayList<User> resultArray = (ArrayList<User>)jdbcTemplate.query(sql, new Object[]{email, nickname}, new UserMapper());
-        return resultArray;
+        return (ArrayList<User>) jdbcTemplate.query(sql, new Object[]{email, nickname}, new UserMapper());
     }
 
     public static class UserMapper implements RowMapper<User> {

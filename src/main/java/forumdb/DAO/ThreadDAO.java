@@ -7,14 +7,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -28,7 +22,7 @@ public class ThreadDAO {
     JdbcTemplate jdbcTemplate;
 
     //TODO rewrite method
-    public void createThread(Thread thread) throws DataAccessException{
+    public void createThread(Thread thread) throws DataAccessException {
         List<String> existFieldsNames = new ArrayList<String>();
         List<Object> existFieldsTypes = new ArrayList<Object>();
 
@@ -41,25 +35,25 @@ public class ThreadDAO {
                     existFieldsNames.add(field.getName());
                     existFieldsTypes.add(field.getType().cast(field.get(thread)));
                 }
-            }catch (IllegalAccessException error){
+            } catch (IllegalAccessException error) {
                 System.out.println(error);
             }
         }
 
         StringBuilder sqlNameRows = new StringBuilder();
         StringBuilder sqlParameters = new StringBuilder();
-        for (String nameRow: existFieldsNames) {
+        for (String nameRow : existFieldsNames) {
             sqlNameRows.append(nameRow + ", ");
         }
 
-        for (Object valueRow: existFieldsTypes) {
+        for (Object valueRow : existFieldsTypes) {
             sqlParameters.append(" '" + valueRow.toString() + "', ");
         }
 
-        sqlNameRows.delete(sqlNameRows.length()-2, sqlNameRows.length());
-        sqlParameters.delete(sqlParameters.length()-2, sqlParameters.length());
+        sqlNameRows.delete(sqlNameRows.length() - 2, sqlNameRows.length());
+        sqlParameters.delete(sqlParameters.length() - 2, sqlParameters.length());
 
-        String sql = "INSERT INTO Thread (" + sqlNameRows + ") VALUES (" + sqlParameters + ")";
+        String sql = "INSERT INTO Thread (" + sqlNameRows + ") VALUES (" + sqlParameters + ')';
         //System.out.println("\n\n" + sql + "\n\n");
         jdbcTemplate.update(sql);
     }
@@ -130,49 +124,48 @@ public class ThreadDAO {
     }
 
     public void vote(Integer threadID, Integer userID, Integer key, Integer voteStatus) throws DataAccessException {
-            String sql1 = "UPDATE Thread SET votes = votes + ? WHERE id = ?";
-            jdbcTemplate.update(sql1, key, threadID);
+        String sql1 = "UPDATE Thread SET votes = votes + ? WHERE id = ?";
+        jdbcTemplate.update(sql1, key, threadID);
 
-            String sql2;
-            if ( voteStatus == 0 ) {
-                sql2 = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?)";
-                jdbcTemplate.update(sql2, userID, threadID, key);
-            } else {
-                sql2 = "UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?";
-                jdbcTemplate.update(sql2, key, threadID, userID);
-            }
+        String sql2;
+        if (voteStatus == 0) {
+            sql2 = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?)";
+            jdbcTemplate.update(sql2, userID, threadID, key);
+        } else {
+            sql2 = "UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?";
+            jdbcTemplate.update(sql2, key, threadID, userID);
+        }
     }
 
     public void update(Integer threadID, Thread changedThread) {
-        StringBuilder sql = new StringBuilder( "UPDATE Thread");
+        StringBuilder sql = new StringBuilder("UPDATE Thread");
 
         String title = changedThread.getTitle();
-        Boolean addTitle = false, addMessage =false;
-        if(title != null && !title.isEmpty()) {
+        Boolean addedTitle = false;
+        Boolean addedMessage = false;
+
+        if (title != null && !title.isEmpty()) {
             sql.append(" SET title='" + title + "'");
-            addTitle = true;
+            addedTitle = true;
         }
 
         String message = changedThread.getMessage();
-        if(message != null && !message.isEmpty()) {
-            if(addTitle){
-                sql.append(",");
+        if (message != null && !message.isEmpty()) {
+            if (addedTitle) {
+                sql.append(',');
             } else {
                 sql.append(" SET");
             }
 
             sql.append(" message='" + message + "'");
-            addMessage = true;
+            addedMessage = true;
         }
 
-        if(addMessage || addTitle) {
+        if (addedMessage || addedTitle) {
             sql.append(" WHERE id=" + threadID);
             jdbcTemplate.update(sql.toString());
         }
     }
-
-
-
 
 
     public static class ThreadMapper implements RowMapper<Thread> {

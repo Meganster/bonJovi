@@ -26,11 +26,11 @@ public class User {
         this.email = user.email;
     }
 
-    public User(){
+    public User() {
 
     }
 
-    public Integer getId(){
+    public Integer getId() {
         return id;
     }
 

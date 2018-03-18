@@ -1,30 +1,20 @@
 package forumdb.Model;
 
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-
 public class PostDetails {
     private User author;
     private Forum forum;
     private Post post;
     private Thread thread;
 
-    @JsonCreator
-    public PostDetails(
-            @JsonProperty("author") User author,
-            @JsonProperty("forum") Forum forum,
-            @JsonProperty("post") Post post,
-            @JsonProperty("thread") Thread thread) {
+    public PostDetails(User author, Forum forum, Post post, Thread thread) {
         this.author = author;
         this.forum = forum;
         this.post = post;
         this.thread = thread;
     }
 
-    @JsonCreator
-    public PostDetails(@JsonProperty("post") Post post) {
+    public PostDetails(Post post) {
         this.post = post;
         this.author = null;
         this.forum = null;
