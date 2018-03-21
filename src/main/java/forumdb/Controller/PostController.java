@@ -124,10 +124,9 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.OK).body(postDetails);
     }
 
-    //TODO rewrite sql dao, doesn't work properly
     @GetMapping(value = "api/thread/{slug_or_id}/posts")
     public ResponseEntity<?> getPosts(@PathVariable("slug_or_id") String slugOrId,
-                                      @RequestParam(value = "marker", defaultValue = "0") Integer marker,
+                                      @RequestParam(value = "since", defaultValue = "0") Integer since,
                                       @RequestParam(value = "limit", defaultValue = "0") Integer limit,
                                       @RequestParam(value = "sort", defaultValue = "flat") String sort,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
@@ -139,22 +138,25 @@ public class PostController {
 
         List<Post> resultPosts = null;
         if (sort.equals("flat")) {
-            resultPosts = postService.getFlatSortForPosts(thread, marker, limit, desc);
-            marker += resultPosts.size();
+            resultPosts = postService.getFlatSortForPosts(thread, since, limit, desc);
         }
 
         if (sort.equals("tree")) {
-            resultPosts = postService.getTreeSortForPosts(thread, marker, limit, desc);
-            marker += resultPosts.size();
+            resultPosts = postService.getTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
+        //TODO rewrite sql dao, doesn't work properly
         if (sort.equals("parent_tree")) {
-            resultPosts = postService.getParentTreeSortForPosts(thread, marker, limit, desc);
-            for (Post post : resultPosts) {
-                if (post.getParent() == 0 || post.getParent() == null) {
-                    marker++;
-                }
-            }
+            System.out.println("limit = " + limit);
+            System.out.println("since = " + since);
+            System.out.println("sort = " + sort);
+            System.out.println("threadID = " + thread.getId());
+            resultPosts = postService.getParentTreeSortForPosts(thread.getId(), 0, limit, desc);
+//            for (Post post : resultPosts) {
+//                if (post.getParent() == 0 || post.getParent() == null) {
+//                    since++;
+//                }
+//            }
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(resultPosts);

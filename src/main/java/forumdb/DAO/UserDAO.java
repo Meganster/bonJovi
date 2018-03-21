@@ -32,7 +32,7 @@ public class UserDAO {
         final StringBuilder sql = new StringBuilder("UPDATE \"User\" SET");
 
         if (conditionEmail) {
-            sql.append(" email='" + email + "'::citext");
+            sql.append(" email='").append(email).append("'::citext");
         }
 
         if (conditionAbout) {
@@ -50,7 +50,7 @@ public class UserDAO {
         }
 
         if (sql.length() > EMPTY_SQL_STRING_LENGTH) {
-            sql.append(" WHERE nickname='" + nickname + "'::citext;");
+            sql.append(" WHERE nickname='").append(nickname).append("'::citext;");
             jdbcTemplate.update(sql.toString());
         }
     }
@@ -70,7 +70,7 @@ public class UserDAO {
 
         @Override
         public User mapRow(ResultSet resultSet, int i) throws SQLException {
-            User user = new User();
+            final User user = new User();
             user.setEmail(resultSet.getString("email"));
             user.setNickname(resultSet.getString("nickname"));
             user.setFullname(resultSet.getString("fullname"));

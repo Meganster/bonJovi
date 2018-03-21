@@ -4,6 +4,7 @@ package forumdb.DAO;
 import forumdb.Model.Post;
 import forumdb.Model.Thread;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -98,7 +99,7 @@ public class PostDAO {
 
     public List<Post> getFlatSortForPosts(Thread thread, Integer marker, Integer limit, Boolean desc) {
         Integer id = thread.getId();
-        StringBuilder sql = new StringBuilder("SELECT * FROM Post Where thread=" + id + " ORDER BY");
+        StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=" + id + " AND id>" + marker + " ORDER BY");
 
         if (desc == true) {
             sql.append(" created DESC, id DESC");
@@ -109,45 +110,104 @@ public class PostDAO {
         if (limit > 0) {
             sql.append(" LIMIT " + limit);
         }
-
-        if (marker > 0) {
-            sql.append(" OFFSET " + marker);
-        }
+        sql.append(';');
 
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
-    public List<Post> getTreeSortForPosts(Thread threadModel, Integer marker, Integer limit, Boolean desc) {
-        Integer id = threadModel.getId();
-
-        StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
-                " SELECT id, array_append('{}'::INTEGER[], id) FROM Post WHERE parent=0 AND thread=" + id +
+    public List<Post> getTreeSortForPosts(Integer threadID, Integer since, Integer limit, Boolean desc) {
+        final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
+                " SELECT id, array_append('{}'::INTEGER[], id) FROM Post WHERE parent=0 AND thread=" + threadID +
                 "UNION ALL SELECT P.id, array_append(path, P.id) FROM Post AS P " +
-                "JOIN recursivetree AS R ON R.id=P.parent AND P.thread=" + id +
-                " ) SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id ORDER BY recursivetree.path");
+                "JOIN recursivetree AS R ON R.id=P.parent AND P.thread=" + threadID +
+                " ) SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id");
+
+        if (since > 0) {
+            sql.append(" WHERE P.thread=").append(threadID).append("AND recursivetree.path ");
+            if (desc) {
+                sql.append('<');
+            } else {
+                sql.append('>');
+            }
+
+            sql.append(" (SELECT recursivetree.path FROM recursivetree WHERE recursivetree.id=").append(since).append(')');
+        }
+
+        sql.append(" ORDER BY recursivetree.path");
 
         if (desc == true) {
+            sql.append("  DESC, P.id DESC");
+        }
+
+        if (limit > 0) {
+            sql.append(" LIMIT ").append(limit);
+        }
+        sql.append(';');
+
+        return jdbcTemplate.query(sql.toString(), new PostMapper());
+
+        /*StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=" + threadId);
+        if (since > 0) {
+            if (desc) {
+                sql.append(" AND path < (SELECT path FROM Post WHERE id=" + since + ")");
+            } else {
+                sql.append(" AND path > (SELECT path FROM Post WHERE id=" + since + ")");
+            }
+
+            sql.append(" ORDER BY path");
+        }
+
+        if (desc) {
+            sql.append(" DESC, id DESC");
+        }
+
+        if (limit != null) {
+            sql.append(" LIMIT " + limit);
+        }
+        sql.append(';');
+
+        System.out.println("---------getTreeSortForPosts---------");
+        System.out.println(sql);
+        return jdbcTemplate.query(sql.toString(), new PostMapper());*/
+    }
+
+    public List<Post> getParentTreeSortForPosts(Integer threadID, Integer marker, Integer limit, Boolean desc) {
+        /*final Integer id = threadModel.getId();
+
+        final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
+                " SELECT id, array_append('{}'::INTEGER[], id) FROM" +
+                " (SELECT DISTINCT id FROM Post" +
+                " WHERE thread=" + id + //" AND id>" + marker +
+                " AND parent=0 ORDER BY id");
+
+        if (desc) {
             sql.append(" DESC");
         }
+
 
         if (limit > 0) {
             sql.append(" LIMIT " + limit);
         }
 
-        if (marker > 0) {
-            sql.append(" OFFSET " + marker);
+        sql.append(") superParents UNION ALL " +
+                "SELECT P.id, array_append(path, P.id) FROM Post AS P " +
+                "JOIN recursivetree AS R ON R.id=P.parent) " +
+                "SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id " +
+                "ORDER BY recursivetree.path");
+
+        if (desc) {
+            sql.append(" DESC");
         }
+        sql.append(';');
 
-        return jdbcTemplate.query(sql.toString(), new PostMapper());
-    }
+        System.out.println("---------getParentTreeSortForPosts---------");
+        System.out.println(sql);
 
-    public List<Post> getParentTreeSortForPosts(Thread threadModel, Integer marker, Integer limit, Boolean desc) {
-        Integer id = threadModel.getId();
-
-        StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
+        return jdbcTemplate.query(sql.toString(), new PostMapper());*/
+        final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
                 " SELECT id, array_append('{}'::INTEGER[], id) FROM" +
                 " (SELECT DISTINCT id FROM Post" +
-                " WHERE thread=" + id +
+                " WHERE thread=" + threadID +
                 " AND parent=0 ORDER BY id");
 
         if (desc == true) {
@@ -156,10 +216,6 @@ public class PostDAO {
 
         if (limit > 0) {
             sql.append(" LIMIT " + limit);
-        }
-
-        if (marker > 0) {
-            sql.append(" OFFSET " + marker);
         }
 
         sql.append(") superParents UNION ALL " +

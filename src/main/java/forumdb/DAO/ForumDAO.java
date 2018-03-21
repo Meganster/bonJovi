@@ -20,37 +20,36 @@ public class ForumDAO {
     JdbcTemplate jdbcTemplate;
 
     public void create(String title, String user, String slug) throws DataAccessException {
-        String sql = "INSERT INTO Forum (title, \"user\", slug) VALUES (?, ?, ?)";
+        final String sql = "INSERT INTO Forum (title, \"user\", slug) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, title, user, slug);
     }
 
     public Forum getForum(String slug) throws DataAccessException {
-        String sql = "SELECT * FROM Forum WHERE slug = ?::citext";
+        final String sql = "SELECT * FROM Forum WHERE slug = ?::citext";
         return jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ForumMapper());
     }
 
     public void upNumberOfThreads(String slug) {
-        String sql = "UPDATE Forum SET threads = threads + 1 WHERE slug = ?::citext";
+        final String sql = "UPDATE Forum SET threads = threads + 1 WHERE slug = ?::citext";
         jdbcTemplate.update(sql, slug);
     }
 
     public void upNumberOfPosts(String slug, int numberOfPost) {
-        String SQL = "UPDATE Forum SET posts = posts + ? WHERE slug = ?";
-        jdbcTemplate.update(SQL, numberOfPost, slug);
+        final String sql = "UPDATE Forum SET posts = posts + ? WHERE slug = ?";
+        jdbcTemplate.update(sql, numberOfPost, slug);
     }
 
     public List<User> getUsers(String slugForum, Integer limit, String since, Boolean desc) {
-        //TODO rewrite sql (???)
-        StringBuilder sql = new StringBuilder("SELECT * FROM \"User\" WHERE \"User\".nickname IN " +
+        final StringBuilder sql = new StringBuilder("SELECT * FROM \"User\" WHERE \"User\".nickname IN " +
                 "(SELECT POST.author FROM POST WHERE POST.forum='" + slugForum + "'::citext " +
                 "UNION " +
                 "SELECT Thread.author FROM Thread WHERE Thread.forum='" + slugForum + "'::citext)");
 
         if (!since.isEmpty()) {
             if (desc == true) {
-                sql.append(" AND \"User\".nickname < '" + since + "'::citext");
+                sql.append(" AND \"User\".nickname < '").append(since).append("'::citext");
             } else {
-                sql.append(" AND \"User\".nickname > '" + since + "'::citext");
+                sql.append(" AND \"User\".nickname > '").append(since).append("'::citext");
             }
         }
 
@@ -60,7 +59,7 @@ public class ForumDAO {
         }
 
         if (limit > 0) {
-            sql.append(" LIMIT " + limit);
+            sql.append(" LIMIT ").append(limit);
         }
 
         return jdbcTemplate.query(sql.toString(), new UserDAO.UserMapper());
@@ -71,7 +70,7 @@ public class ForumDAO {
 
         @Override
         public Forum mapRow(ResultSet resultSet, int i) throws SQLException {
-            Forum forum = new Forum();
+            final Forum forum = new Forum();
             forum.setTitle(resultSet.getString("title"));
             forum.setUser(resultSet.getString("user"));
             forum.setSlug(resultSet.getString("slug"));
