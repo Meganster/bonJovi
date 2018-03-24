@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 public class ForumController {
     @Autowired
@@ -21,12 +20,17 @@ public class ForumController {
     @Autowired
     private ThreadDAO threadService;
 
+    @RequestMapping("/")
+    public String index() {
+        return "Greetings from Spring Boot!";
+    }
+
     @PostMapping(value = "/api/forum/create")
     public ResponseEntity<?> createForum(@RequestBody Forum forum) {
         try {
             final Forum existForum = forumService.getForum(forum.getSlug());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(existForum);
-        } catch (DataAccessException errorFirst) {
+        } catch (DataAccessException error) {
             try {
                 final User existUser = userService.getUser(forum.getUser());
 

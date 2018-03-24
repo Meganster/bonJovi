@@ -30,8 +30,6 @@ public class PostController {
     @Autowired
     ThreadDAO threadService;
 
-    private static final ObjectMapper mapperData = new ObjectMapper();
-
     @PostMapping(value = "/api/thread/{slug_or_id}/create")
     public ResponseEntity<?> createPosts(@PathVariable("slug_or_id") String slugOrId, @RequestBody List<Post> posts) {
 
@@ -138,25 +136,20 @@ public class PostController {
 
         List<Post> resultPosts = null;
         if (sort.equals("flat")) {
-            resultPosts = postService.getFlatSortForPosts(thread, since, limit, desc);
+            resultPosts = postService.getFlatSortForPosts(thread.getId(), since, limit, desc);
         }
 
         if (sort.equals("tree")) {
             resultPosts = postService.getTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
-        //TODO rewrite sql dao, doesn't work properly
         if (sort.equals("parent_tree")) {
+            System.out.println("DESC = " + desc);
             System.out.println("limit = " + limit);
             System.out.println("since = " + since);
             System.out.println("sort = " + sort);
             System.out.println("threadID = " + thread.getId());
-            resultPosts = postService.getParentTreeSortForPosts(thread.getId(), 0, limit, desc);
-//            for (Post post : resultPosts) {
-//                if (post.getParent() == 0 || post.getParent() == null) {
-//                    since++;
-//                }
-//            }
+            resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(resultPosts);

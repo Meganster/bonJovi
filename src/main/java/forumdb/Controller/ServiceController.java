@@ -25,13 +25,13 @@ public class ServiceController {
         }
     }
 
-    @PostMapping("/api/service/clear")
-    public ResponseEntity<?> clearDatabase() {
-        try {
-            dbService.clear();
-            return ResponseEntity.status(HttpStatus.OK).body(null);
-        } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-    }
+//    @PostMapping("/api/service/clear")
+//    public ResponseEntity<?> clearDatabase() {
+//        try {
+//            dbService.clear();
+//            return ResponseEntity.status(HttpStatus.OK).body(null);
+//        } catch (DataAccessException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+//        }
+//    }
 }

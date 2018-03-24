@@ -24,11 +24,6 @@ public class ThreadController {
     @Autowired
     UserDAO userService;
 
-    @RequestMapping("/")
-    public String index() {
-        return "Greetings from Spring Boot!";
-    }
-
     @PostMapping(value = "/api/forum/{slug}/create")
     public ResponseEntity<?> createThread(@PathVariable("slug") String slug, @RequestBody Thread thread) {
         Forum forum;

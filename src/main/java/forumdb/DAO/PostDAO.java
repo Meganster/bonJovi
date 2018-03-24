@@ -88,18 +88,31 @@ public class PostDAO {
     }
 
     public void update(Post post, Post changedPost) {
-        String message = changedPost.getMessage();
+        final String message = changedPost.getMessage();
         if (message == null || message.isEmpty() || message.equals(post.getMessage())) {
             return;
         }
 
-        String SQL = "UPDATE Post SET message = ?, isEdited = TRUE WHERE id = ?";
+        final String SQL = "UPDATE Post SET message = ?, isEdited = TRUE WHERE id = ?";
         jdbcTemplate.update(SQL, message, post.getId());
     }
 
-    public List<Post> getFlatSortForPosts(Thread thread, Integer marker, Integer limit, Boolean desc) {
-        Integer id = thread.getId();
-        StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=" + id + " AND id>" + marker + " ORDER BY");
+    public List<Post> getFlatSortForPosts(Integer threadID, Integer since, Integer limit, Boolean desc) {
+        final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=" + threadID);
+
+        if (since > 0) {
+            sql.append(" AND id");
+
+            if (desc == true) {
+                sql.append('<');
+            } else {
+                sql.append('>');
+            }
+
+            sql.append(since);
+        }
+
+        sql.append(" ORDER BY");
 
         if (desc == true) {
             sql.append(" created DESC, id DESC");
@@ -108,7 +121,7 @@ public class PostDAO {
         }
 
         if (limit > 0) {
-            sql.append(" LIMIT " + limit);
+            sql.append(" LIMIT ").append(limit);
         }
         sql.append(';');
 
@@ -171,39 +184,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());*/
     }
 
-    public List<Post> getParentTreeSortForPosts(Integer threadID, Integer marker, Integer limit, Boolean desc) {
-        /*final Integer id = threadModel.getId();
-
-        final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
-                " SELECT id, array_append('{}'::INTEGER[], id) FROM" +
-                " (SELECT DISTINCT id FROM Post" +
-                " WHERE thread=" + id + //" AND id>" + marker +
-                " AND parent=0 ORDER BY id");
-
-        if (desc) {
-            sql.append(" DESC");
-        }
-
-
-        if (limit > 0) {
-            sql.append(" LIMIT " + limit);
-        }
-
-        sql.append(") superParents UNION ALL " +
-                "SELECT P.id, array_append(path, P.id) FROM Post AS P " +
-                "JOIN recursivetree AS R ON R.id=P.parent) " +
-                "SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id " +
-                "ORDER BY recursivetree.path");
-
-        if (desc) {
-            sql.append(" DESC");
-        }
-        sql.append(';');
-
-        System.out.println("---------getParentTreeSortForPosts---------");
-        System.out.println(sql);
-
-        return jdbcTemplate.query(sql.toString(), new PostMapper());*/
+    public List<Post> getParentTreeSortForPosts(Integer threadID, Integer since, Integer limit, Boolean desc) {
         final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, path) AS (" +
                 " SELECT id, array_append('{}'::INTEGER[], id) FROM" +
                 " (SELECT DISTINCT id FROM Post" +
@@ -214,20 +195,51 @@ public class PostDAO {
             sql.append(" DESC");
         }
 
-        if (limit > 0) {
-            sql.append(" LIMIT " + limit);
+        if (limit > 0 && since == 0) {
+            sql.append(" LIMIT ").append(limit);
         }
 
         sql.append(") superParents UNION ALL " +
                 "SELECT P.id, array_append(path, P.id) FROM Post AS P " +
                 "JOIN recursivetree AS R ON R.id=P.parent) " +
-                "SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id " +
-                "ORDER BY recursivetree.path");
+                "SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id");
+
+        if (since > 0) {
+            sql.append(" WHERE P.thread=").append(threadID).append(" AND recursivetree.path ");
+            if (desc) {
+                sql.append('<');
+            } else {
+                sql.append('>');
+            }
+
+            sql.append(" (SELECT recursivetree.path FROM recursivetree WHERE recursivetree.id=").append(since).append(')');
+        }
+
+        sql.append(" ORDER BY recursivetree.path");
+
+        if (desc == true && since == 0) {
+            sql.append("[1] DESC");
+
+            if (limit > 0) {
+                sql.append(", recursivetree.path");
+            }
+        }
+
+        sql.append(", P.thread");
 
         if (desc == true) {
             sql.append(" DESC");
         }
 
+        if (limit > 0 && since > 0) {
+//            if(desc == true && since > 0 && limit == 3) {
+//                sql.append(" LIMIT ").append(12);
+//            } else
+                sql.append(" LIMIT ").append(limit);
+        }
+        sql.append(';');
+
+        System.out.println(sql.toString());
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
