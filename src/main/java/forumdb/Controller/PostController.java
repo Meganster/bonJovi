@@ -144,11 +144,11 @@ public class PostController {
         }
 
         if (sort.equals("parent_tree")) {
-            System.out.println("DESC = " + desc);
-            System.out.println("limit = " + limit);
-            System.out.println("since = " + since);
-            System.out.println("sort = " + sort);
-            System.out.println("threadID = " + thread.getId());
+            //System.out.println("DESC = " + desc);
+            //System.out.println("limit = " + limit);
+            //System.out.println("since = " + since);
+            //System.out.println("sort = " + sort);
+            //System.out.println("threadID = " + thread.getId());
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
