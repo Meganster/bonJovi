@@ -25,8 +25,8 @@ public class PostDAO {
         List<String> existFieldsNames = new ArrayList<>();
         List<Object> existFieldsTypes = new ArrayList<>();
 
-        Class chkPost = Post.class;
-        for (Field field : chkPost.getDeclaredFields()) {
+        Class checkedPost = Post.class;
+        for (Field field : checkedPost.getDeclaredFields()) {
             field.setAccessible(true);
 
             try {
@@ -39,21 +39,19 @@ public class PostDAO {
             }
         }
 
-        StringBuilder sqlNameRows = new StringBuilder();
-        StringBuilder sqlParameters = new StringBuilder();
+        final StringBuilder sqlNameRows = new StringBuilder();
+        final StringBuilder sqlParameters = new StringBuilder();
         for (String nameRow : existFieldsNames) {
-            sqlNameRows.append(nameRow + ", ");
+            sqlNameRows.append(nameRow).append(", ");
         }
         for (Object valueRow : existFieldsTypes) {
-            sqlParameters.append(" '" + valueRow.toString() + "', ");
+            sqlParameters.append(" '").append(valueRow.toString()).append("', ");
         }
 
         sqlNameRows.delete(sqlNameRows.length() - 2, sqlNameRows.length());
         sqlParameters.delete(sqlParameters.length() - 2, sqlParameters.length());
 
-        String sql = "INSERT INTO Post (" + sqlNameRows + ") VALUES (" + sqlParameters + ')';
-        //System.out.println("\n\n" + sql + "\n\n");
-        jdbcTemplate.update(sql);
+        jdbcTemplate.update("INSERT INTO Post (" + sqlNameRows + ") VALUES (" + sqlParameters + ')');
     }
 
     public Integer getMaxPostId() {
@@ -208,7 +206,6 @@ public class PostDAO {
         }
         sql.append(';');
 
-        //System.out.println(sql.toString());
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 

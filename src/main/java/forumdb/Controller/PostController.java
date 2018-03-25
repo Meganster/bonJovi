@@ -33,7 +33,14 @@ public class PostController {
     @PostMapping(value = "/api/thread/{slug_or_id}/create")
     public ResponseEntity<?> createPosts(@PathVariable("slug_or_id") String slugOrId, @RequestBody List<Post> posts) {
 
-        Thread thread = threadService.getThreadSlugOrId(slugOrId);
+        Thread thread;
+        try {
+            final int threadID = Integer.parseInt(slugOrId);
+            thread = threadService.getThreadByID(threadID);
+        } catch (NumberFormatException e) {
+            thread = threadService.getThreadBySlug(slugOrId);
+        }
+
         if (thread == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
         }
@@ -129,7 +136,14 @@ public class PostController {
                                       @RequestParam(value = "sort", defaultValue = "flat") String sort,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
 
-        final Thread thread = threadService.getThreadSlugOrId(slugOrId);
+        Thread thread;
+        try {
+            final int threadID = Integer.parseInt(slugOrId);
+            thread = threadService.getThreadByID(threadID);
+        } catch (NumberFormatException e) {
+            thread = threadService.getThreadBySlug(slugOrId);
+        }
+
         if (thread == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }

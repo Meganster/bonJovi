@@ -17,17 +17,15 @@ import java.util.List;
 
 @Repository
 public class ThreadDAO {
-
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    //TODO rewrite method (IMPORTANT!!!)
     public void createThread(Thread thread) throws DataAccessException {
-        List<String> existFieldsNames = new ArrayList<String>();
-        List<Object> existFieldsTypes = new ArrayList<Object>();
+        List<String> existFieldsNames = new ArrayList<>();
+        List<Object> existFieldsTypes = new ArrayList<>();
 
-        Class chkThread = Thread.class;
-        for (Field field : chkThread.getDeclaredFields()) {
+        final Class checkedThread = Thread.class;
+        for (Field field : checkedThread.getDeclaredFields()) {
             field.setAccessible(true);
 
             try {
@@ -40,14 +38,15 @@ public class ThreadDAO {
             }
         }
 
-        StringBuilder sqlNameRows = new StringBuilder();
-        StringBuilder sqlParameters = new StringBuilder();
+        final StringBuilder sqlNameRows = new StringBuilder();
+        final StringBuilder sqlParameters = new StringBuilder();
+
         for (String nameRow : existFieldsNames) {
-            sqlNameRows.append(nameRow + ", ");
+            sqlNameRows.append(nameRow).append(", ");
         }
 
         for (Object valueRow : existFieldsTypes) {
-            sqlParameters.append(" '" + valueRow.toString() + "', ");
+            sqlParameters.append(" '").append(valueRow.toString()).append("', ");
         }
 
         sqlNameRows.delete(sqlNameRows.length() - 2, sqlNameRows.length());
@@ -57,12 +56,12 @@ public class ThreadDAO {
     }
 
     public Thread getThread(String nickname, String slugForum, String title) {
-        return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE author = ?::citext AND forum = ?::citext AND title = ?",
+        return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE author = ?::CITEXT AND forum = ?::CITEXT AND title = ?",
                 new Object[]{nickname, slugForum, title}, new ThreadMapper());
     }
 
     public Thread getThread(String slugThread) {
-        final String sql = "SELECT * FROM Thread WHERE slug = ?::citext";
+        final String sql = "SELECT * FROM Thread WHERE slug = ?::CITEXT";
         return jdbcTemplate.queryForObject(sql, new Object[]{slugThread}, new ThreadMapper());
     }
 
@@ -92,22 +91,21 @@ public class ThreadDAO {
         return jdbcTemplate.query(sql.toString(), new ThreadMapper());
     }
 
-    public Thread getThreadSlugOrId(String slugOrId) {
+    public Thread getThreadByID(Integer id) {
         try {
-            try {
-                final int threadID = Integer.parseInt(slugOrId);
-                String sql = "SELECT * FROM Thread WHERE id = ?";
-                return jdbcTemplate.queryForObject(sql, new Object[]{threadID}, new ThreadMapper());
-            } catch (DataAccessException e) {
-                return null;
-            }
-        } catch (NumberFormatException e) {
-            try {
-                final String sql = "SELECT * FROM Thread WHERE slug = ?::citext";
-                return jdbcTemplate.queryForObject(sql, new Object[]{slugOrId}, new ThreadMapper());
-            } catch (DataAccessException err) {
-                return null;
-            }
+            final String sql = "SELECT * FROM Thread WHERE id = ?";
+            return jdbcTemplate.queryForObject(sql, new Object[]{id}, new ThreadMapper());
+        } catch (DataAccessException e) {
+            return null;
+        }
+    }
+
+    public Thread getThreadBySlug(String slug) {
+        try {
+            final String sql = "SELECT * FROM Thread WHERE slug = ?::CITEXT";
+            return jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ThreadMapper());
+        } catch (DataAccessException e) {
+            return null;
         }
     }
 

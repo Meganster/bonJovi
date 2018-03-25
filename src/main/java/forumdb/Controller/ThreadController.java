@@ -47,8 +47,14 @@ public class ThreadController {
 
     @PostMapping(value = "/api/thread/{slug_or_id}/vote")
     public ResponseEntity<?> voteForThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Vote vote) {
+        Thread thread;
+        try {
+            final int threadID = Integer.parseInt(slugOrId);
+            thread = threadService.getThreadByID(threadID);
+        } catch (NumberFormatException e) {
+            thread = threadService.getThreadBySlug(slugOrId);
+        }
 
-        Thread thread = threadService.getThreadSlugOrId(slugOrId);
         if (thread == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
@@ -92,7 +98,14 @@ public class ThreadController {
 
     @GetMapping(value = "api/thread/{slug_or_id}/details")
     public ResponseEntity<?> getDetails(@PathVariable("slug_or_id") String slugOrId) {
-        Thread thread = threadService.getThreadSlugOrId(slugOrId);
+        Thread thread;
+        try {
+            final int threadID = Integer.parseInt(slugOrId);
+            thread = threadService.getThreadByID(threadID);
+        } catch (NumberFormatException e) {
+            thread = threadService.getThreadBySlug(slugOrId);
+        }
+
         if (thread == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         } else {
@@ -102,7 +115,14 @@ public class ThreadController {
 
     @PostMapping(value = "api/thread/{slug_or_id}/details")
     public ResponseEntity<?> updateThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Thread changedThread) {
-        Thread thread = threadService.getThreadSlugOrId(slugOrId);
+        Thread thread;
+        try {
+            final int threadID = Integer.parseInt(slugOrId);
+            thread = threadService.getThreadByID(threadID);
+        } catch (NumberFormatException e) {
+            thread = threadService.getThreadBySlug(slugOrId);
+        }
+
         if (thread == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
