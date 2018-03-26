@@ -12,21 +12,19 @@ import org.springframework.stereotype.Repository;
 public class ServiceDAO {
     @Autowired
     private JdbcTemplate jdbcTemplate;
-    private final String[] nameTables = new String[]{"\"User\"", "Forum", "Thread", "Post", "UserVoteForThreads"};
 
     public InfoAboutDB getStatus() throws DataAccessException {
         final InfoAboutDB currentStatus = new InfoAboutDB();
-        currentStatus.setForum(jdbcTemplate.queryForObject("SELECT count(*) FROM Forum", Integer.class));
-        currentStatus.setPost(jdbcTemplate.queryForObject("SELECT count(*) FROM Post", Integer.class));
-        currentStatus.setThread(jdbcTemplate.queryForObject("SELECT count(*) FROM Thread", Integer.class));
-        currentStatus.setUser(jdbcTemplate.queryForObject("SELECT count(*) FROM \"User\"", Integer.class));
+        currentStatus.setForum(jdbcTemplate.queryForObject("SELECT count(*) FROM Forum;", Integer.class));
+        currentStatus.setPost(jdbcTemplate.queryForObject("SELECT count(*) FROM Post;", Integer.class));
+        currentStatus.setThread(jdbcTemplate.queryForObject("SELECT count(*) FROM Thread;", Integer.class));
+        currentStatus.setUser(jdbcTemplate.queryForObject("SELECT count(*) FROM \"User\";", Integer.class));
 
         return currentStatus;
     }
 
     public void clear() throws DataAccessException {
-        for (String nameTable : nameTables) {
-            jdbcTemplate.update("DELETE FROM " + nameTable);
-        }
+        jdbcTemplate.update("DELETE FROM \"User\"; DELETE FROM Forum; DELETE FROM Thread;" +
+                " DELETE FROM Post; DELETE FROM UserVoteForThreads;");
     }
 }

@@ -1,6 +1,5 @@
 package forumdb.Controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import forumdb.DAO.UserDAO;
 
 import forumdb.Model.User;
@@ -14,8 +13,6 @@ import java.util.ArrayList;
 
 @RestController
 public class UserController {
-
-    private static final ObjectMapper mapperData = new ObjectMapper();
     @Autowired
     private UserDAO userTemplate;
 
@@ -26,7 +23,6 @@ public class UserController {
             userTemplate.create(user.getEmail(), nickname, user.getFullname(), user.getAbout());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(userTemplate.getUser(nickname));
-            //userTemplate.getUser(nickname).toObjectNode(mapperData));
         } catch (DataAccessException error) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(userTemplate.getUsers(nickname, user.getEmail()));
         }
@@ -48,7 +44,7 @@ public class UserController {
             String newEmail = null;
 
             try {
-                if (user.getEmail() != null && userForChange.getEmail() != user.getEmail()) {
+                if (user.getEmail() != null && !userForChange.getEmail().equals(user.getEmail())) {
                     newEmail = user.getEmail();
                     final ArrayList<User> emailList = userTemplate.getUsers("", newEmail);
 

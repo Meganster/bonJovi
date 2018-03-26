@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +21,7 @@ public class ThreadDAO {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public void createThread(Thread thread) throws DataAccessException {
+    public void createThread(@NotNull Thread thread) throws DataAccessException {
         List<String> existFieldsNames = new ArrayList<>();
         List<Object> existFieldsTypes = new ArrayList<>();
 
@@ -52,25 +53,19 @@ public class ThreadDAO {
         sqlNameRows.delete(sqlNameRows.length() - 2, sqlNameRows.length());
         sqlParameters.delete(sqlParameters.length() - 2, sqlParameters.length());
 
-        jdbcTemplate.update("INSERT INTO Thread (" + sqlNameRows + ") VALUES (" + sqlParameters + ')');
+        final StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO Thread (").append(sqlNameRows).append(") VALUES (").append(sqlParameters).append(");");
+        jdbcTemplate.update(sql.toString());
     }
 
-    public Thread getThread(String nickname, String slugForum, String title) {
-        return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE author = ?::CITEXT AND forum = ?::CITEXT AND title = ?",
+    public Thread getThread(@NotNull String nickname, @NotNull String slugForum, @NotNull String title) {
+        return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE author = ?::CITEXT " +
+                        "AND forum = ?::CITEXT AND title = ?;",
                 new Object[]{nickname, slugForum, title}, new ThreadMapper());
     }
 
-    public Thread getThread(String slugThread) {
-        final String sql = "SELECT * FROM Thread WHERE slug = ?::CITEXT";
-        return jdbcTemplate.queryForObject(sql, new Object[]{slugThread}, new ThreadMapper());
-    }
-
-    public Thread getThreadID(Integer threadID) {
-        final String sql = "SELECT * FROM Thread WHERE id =" + threadID;
-        return jdbcTemplate.queryForObject(sql, new ThreadMapper());
-    }
-
-    public List<Thread> getThreads(String slugForum, Integer limit, String since, Boolean desc) {
+    public List<Thread> getThreads(@NotNull String slugForum,
+                                   @NotNull Integer limit, @NotNull String since, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Thread WHERE forum = '" + slugForum + "'::citext");
         if (!since.isEmpty()) {
             if (desc == true) {
@@ -91,48 +86,47 @@ public class ThreadDAO {
         return jdbcTemplate.query(sql.toString(), new ThreadMapper());
     }
 
-    public Thread getThreadByID(Integer id) {
+    public Thread getThreadByID(@NotNull Integer id) {
         try {
-            final String sql = "SELECT * FROM Thread WHERE id = ?";
-            return jdbcTemplate.queryForObject(sql, new Object[]{id}, new ThreadMapper());
+            return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE id = ?;",
+                    new Object[]{id}, new ThreadMapper());
         } catch (DataAccessException e) {
             return null;
         }
     }
 
-    public Thread getThreadBySlug(String slug) {
+    public Thread getThreadBySlug(@NotNull String slug) {
         try {
-            final String sql = "SELECT * FROM Thread WHERE slug = ?::CITEXT";
-            return jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ThreadMapper());
+            return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE slug = ?::citext;",
+                    new Object[]{slug}, new ThreadMapper());
         } catch (DataAccessException e) {
             return null;
         }
     }
 
-    public Integer getVote(Integer userID, Integer threadID) {
+    public Integer getVote(@NotNull Integer userID, @NotNull Integer threadID) {
         try {
-            final String sql = "SELECT vote FROM UserVoteForThreads WHERE user_id = ? AND thread_id = ?";
-            return jdbcTemplate.queryForObject(sql, new Object[]{userID, threadID}, Integer.class);
+            return jdbcTemplate.queryForObject("SELECT vote FROM UserVoteForThreads WHERE user_id = ? AND thread_id = ?;",
+                    new Object[]{userID, threadID}, Integer.class);
         } catch (DataAccessException e) {
             return null;
         }
     }
 
-    public void vote(Integer threadID, Integer userID, Integer key, Integer voteStatus) throws DataAccessException {
-        final String sql1 = "UPDATE Thread SET votes = votes + ? WHERE id = ?";
-        jdbcTemplate.update(sql1, key, threadID);
+    public void vote(@NotNull Integer threadID, @NotNull Integer userID,
+                     @NotNull Integer key, @NotNull Integer voteStatus) throws DataAccessException {
+        jdbcTemplate.update("UPDATE Thread SET votes = votes + ? WHERE id = ?;", key, threadID);
 
-        final String sql2;
         if (voteStatus == 0) {
-            sql2 = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?)";
-            jdbcTemplate.update(sql2, userID, threadID, key);
+            jdbcTemplate.update("INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?);",
+                    userID, threadID, key);
         } else {
-            sql2 = "UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?";
-            jdbcTemplate.update(sql2, key, threadID, userID);
+            jdbcTemplate.update("UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?;",
+                    key, threadID, userID);
         }
     }
 
-    public void update(Integer threadID, Thread changedThread) {
+    public void update(@NotNull Integer threadID, @NotNull Thread changedThread) {
         final StringBuilder sql = new StringBuilder("UPDATE Thread");
 
         final String title = changedThread.getTitle();

@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import javax.validation.constraints.NotNull;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,27 +20,28 @@ public class ForumDAO {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public void create(String title, String user, String slug) throws DataAccessException {
-        final String sql = "INSERT INTO Forum (title, \"user\", slug) VALUES (?, ?, ?)";
-        jdbcTemplate.update(sql, title, user, slug);
+    public void create(@NotNull String title, @NotNull String user,
+                       @NotNull String slug) throws DataAccessException {
+        jdbcTemplate.update("INSERT INTO Forum (title, \"user\", slug) VALUES (?, ?, ?);",
+                title, user, slug);
     }
 
-    public Forum getForum(String slug) throws DataAccessException {
-        final String sql = "SELECT * FROM Forum WHERE slug = ?::citext";
-        return jdbcTemplate.queryForObject(sql, new Object[]{slug}, new ForumMapper());
+    public Forum getForum(@NotNull String slug) throws DataAccessException {
+        return jdbcTemplate.queryForObject("SELECT * FROM Forum WHERE slug = ?::citext;",
+                new Object[]{slug}, new ForumMapper());
     }
 
-    public void upNumberOfThreads(String slug) {
-        final String sql = "UPDATE Forum SET threads = threads + 1 WHERE slug = ?::citext";
-        jdbcTemplate.update(sql, slug);
+    public void upNumberOfThreads(@NotNull String slug) {
+        jdbcTemplate.update("UPDATE Forum SET threads = threads + 1 WHERE slug = ?::citext;", slug);
     }
 
-    public void upNumberOfPosts(String slug, int numberOfPost) {
-        final String sql = "UPDATE Forum SET posts = posts + ? WHERE slug = ?";
-        jdbcTemplate.update(sql, numberOfPost, slug);
+    public void upNumberOfPosts(@NotNull String slug, @NotNull Integer numberOfPost) {
+        jdbcTemplate.update("UPDATE Forum SET posts = posts + ? WHERE slug = ?;",
+                numberOfPost, slug);
     }
 
-    public List<User> getUsers(String slugForum, Integer limit, String since, Boolean desc) {
+    public List<User> getUsers(@NotNull String slugForum, @NotNull Integer limit,
+                               @NotNull String since, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM \"User\" WHERE \"User\".nickname IN " +
                 "(SELECT POST.author FROM POST WHERE POST.forum='" + slugForum + "'::citext " +
                 "UNION " +

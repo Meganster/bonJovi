@@ -1,7 +1,5 @@
 package forumdb.Controller;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import forumdb.DAO.ForumDAO;
 import forumdb.DAO.PostDAO;
 import forumdb.DAO.ThreadDAO;
@@ -46,9 +44,9 @@ public class PostController {
         }
 
         try {
-            Forum forum = forumService.getForum(thread.getForum());
-            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-            Integer oldMaxPostID = postService.getMaxPostId();
+            final Forum forum = forumService.getForum(thread.getForum());
+            final Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            final Integer oldMaxPostID = postService.getMaxPostId();
 
             for (Post post : posts) {
                 if (post.getForum() != null) {
@@ -67,7 +65,7 @@ public class PostController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
                 }
 
-                Integer parentId = post.getParent();
+                final Integer parentId = post.getParent();
                 if (parentId != null && !parentId.equals(0)) {
                     postService.getParentPost(parentId, thread.getId());
                 }
@@ -84,7 +82,7 @@ public class PostController {
 
     @PostMapping(value = "api/post/{id}/details")
     public ResponseEntity<?> updatePost(@PathVariable("id") Integer id, @RequestBody Post changedPost) {
-        Post post;
+        final Post post;
         try {
             post = postService.getPostById(id);
         } catch (DataAccessException e) {
@@ -99,7 +97,7 @@ public class PostController {
     public ResponseEntity<?> getPostDetails(@PathVariable("id") Integer id,
                                             @RequestParam(value = "related", defaultValue = "") String[] related) {
 
-        Post post;
+        final Post post;
         try {
             post = postService.getPostById(id);
 
@@ -107,7 +105,7 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
         }
 
-        PostDetails postDetails = new PostDetails(post);
+        final PostDetails postDetails = new PostDetails(post);
         if (related == null) {
             return ResponseEntity.status(HttpStatus.OK).body(postDetails);
         }
@@ -118,7 +116,7 @@ public class PostController {
             }
 
             if (key.equals("thread")) {
-                postDetails.setThread(threadService.getThreadID(post.getThread()));
+                postDetails.setThread(threadService.getThreadByID(post.getThread()));
             }
 
             if (key.equals("forum")) {

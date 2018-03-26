@@ -41,7 +41,7 @@ public class ThreadController {
             forumService.upNumberOfThreads(forum.getSlug());
             return ResponseEntity.status(HttpStatus.CREATED).body(threadService.getThread(thread.getAuthor(), slug, thread.getTitle()));
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThread(thread.getSlug()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThreadBySlug(thread.getSlug()));
         }
     }
 
@@ -90,7 +90,7 @@ public class ThreadController {
                     break;
             }
 
-            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThread(thread.getSlug()));
+            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadBySlug(thread.getSlug()));
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + thread.getAuthor()));
         }
@@ -127,12 +127,12 @@ public class ThreadController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find thread by slug: " + slugOrId));
         }
 
-        if (thread.getTitle() == changedThread.getTitle() &&
-                thread.getMessage() == changedThread.getMessage()) {
+        if (thread.getTitle().equals(changedThread.getTitle()) &&
+                thread.getMessage().equals(changedThread.getMessage())) {
             return ResponseEntity.status(HttpStatus.OK).body(thread);
         }
 
         threadService.update(thread.getId(), changedThread);
-        return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadID(thread.getId()));
+        return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadByID(thread.getId()));
     }
 }

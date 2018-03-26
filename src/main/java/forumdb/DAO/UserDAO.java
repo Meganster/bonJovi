@@ -1,6 +1,5 @@
 package forumdb.DAO;
 
-
 import forumdb.Model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -8,23 +7,26 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import javax.validation.constraints.NotNull;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 @Repository
 public class UserDAO {
-    final static Integer EMPTY_SQL_STRING_LENGTH = 17;
+    static final Integer EMPTY_SQL_STRING_LENGTH = 17;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public void create(String email, String nickname, String fullname, String about) throws DataAccessException {
-        final String sql = "INSERT INTO \"User\" (email, nickname, fullname, about) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(sql, email, nickname, fullname, about);
+    public void create(@NotNull String email, @NotNull String nickname,
+                       @NotNull String fullname, @NotNull String about) throws DataAccessException {
+        jdbcTemplate.update("INSERT INTO \"User\" (email, nickname, fullname, about) VALUES (?, ?, ?, ?);",
+                email, nickname, fullname, about);
     }
 
-    public void updateProfile(String email, String fullname, String about, String nickname) throws DataAccessException {
+    public void updateProfile(@NotNull String email, @NotNull String fullname,
+                              @NotNull String about, @NotNull String nickname) throws DataAccessException {
         final Boolean conditionEmail = email != null && !email.isEmpty();
         final Boolean conditionAbout = about != null && !about.isEmpty();
         final Boolean conditionFullname = fullname != null && !fullname.isEmpty();
@@ -39,14 +41,14 @@ public class UserDAO {
             if (conditionEmail) {
                 sql.append(',');
             }
-            sql.append(" about='" + about + "'");
+            sql.append(" about='").append(about).append("'");
         }
 
         if (conditionFullname) {
             if (sql.length() > EMPTY_SQL_STRING_LENGTH) {
                 sql.append(',');
             }
-            sql.append(" fullname='" + fullname + "'");
+            sql.append(" fullname='").append(fullname).append("'");
         }
 
         if (sql.length() > EMPTY_SQL_STRING_LENGTH) {
@@ -55,15 +57,14 @@ public class UserDAO {
         }
     }
 
-    public User getUser(String nickname) throws DataAccessException {
-        final String sql = "SELECT * FROM \"User\" WHERE nickname = ?::citext";
-        return jdbcTemplate.queryForObject(sql, new Object[]{nickname}, new UserMapper());
+    public User getUser(@NotNull String nickname) throws DataAccessException {
+        return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::citext;",
+                new Object[]{nickname}, new UserMapper());
     }
 
-    public ArrayList<User> getUsers(String nickname, String email) throws DataAccessException {
-        final String sql = "SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext";
-
-        return (ArrayList<User>) jdbcTemplate.query(sql, new Object[]{email, nickname}, new UserMapper());
+    public ArrayList<User> getUsers(@NotNull String nickname, @NotNull String email) throws DataAccessException {
+        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext;",
+                new Object[]{email, nickname}, new UserMapper());
     }
 
     public static class UserMapper implements RowMapper<User> {
