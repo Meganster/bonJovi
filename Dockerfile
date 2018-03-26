@@ -1,11 +1,11 @@
-FROM ubuntu:17.04
+FROM ubuntu:16.04
 MAINTAINER VAN YURY
-RUN apt-get -y update
-ENV PGVER 9.6
+RUN apt-get update -y
+ENV PGVER 9.5
 RUN apt-get install -y postgresql-$PGVER
 USER postgres
 
-RUN /etc/init.d/postgresql start &&        psql --command "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';" && createdb -E UTF8 -T template0 -O docker docker && /etc/init.d/postgresql stop
+RUN /etc/init.d/postgresql start &&        psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" && createdb -E UTF8 -T template0 -O docker docker && /etc/init.d/postgresql stop
 
 RUN echo "local all all trust" >> /etc/postgresql/$PGVER/main/pg_hba.conf
 RUN echo "host  all all 127.0.0.1/32 trust" >> /etc/postgresql/$PGVER/main/pg_hba.conf
@@ -50,4 +50,4 @@ RUN mvn package
 
 EXPOSE 5000
 
-CMD service postgresql start && java -Xms200M -Xmx200M -Xss256K -jar target/Db-1.0-SNAPSHOT.jar
+CMD service postgresql start && java -Xms200M -Xmx200M -Xss256K
