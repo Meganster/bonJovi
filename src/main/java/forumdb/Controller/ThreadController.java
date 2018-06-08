@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
+
 
 @RestController
 public class ThreadController {
@@ -37,6 +39,10 @@ public class ThreadController {
 
         try {
             thread.setForum(forum.getSlug());
+            if(thread.getCreated() == null){
+                thread.setCreated(new Timestamp(System.currentTimeMillis()));
+            }
+
             threadService.createThread(thread);
             forumService.upNumberOfThreads(forum.getSlug());
             return ResponseEntity.status(HttpStatus.CREATED).body(threadService.getThread(thread.getAuthor(), slug, thread.getTitle()));
@@ -47,12 +53,15 @@ public class ThreadController {
 
     @PostMapping(value = "/api/thread/{slug_or_id}/vote")
     public ResponseEntity<?> voteForThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Vote vote) {
+        Boolean isSlug = false;
         Thread thread;
         try {
             final int threadID = Integer.parseInt(slugOrId);
             thread = threadService.getThreadByID(threadID);
+            isSlug = false;
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);
+            isSlug = true;
         }
 
         if (thread == null) {
@@ -61,39 +70,16 @@ public class ThreadController {
 
         try {
             final User user = userService.getUser(vote.getNickname());
-            Integer voteStatus = threadService.getVote(user.getId(), thread.getId());
-            if (voteStatus == null) {
-                voteStatus = 0;
-            }
-
-            switch (voteStatus) {
-                case 0:
-                    switch (vote.getVoice()) {
-                        case 1:
-                            threadService.vote(thread.getId(), user.getId(), 1, voteStatus);
-                            break;
-                        case -1:
-                            threadService.vote(thread.getId(), user.getId(), -1, voteStatus);
-                            break;
-                    }
-                    break;
-
-                case 1:
-                    if (vote.getVoice() == -1) {
-                        threadService.vote(thread.getId(), user.getId(), -2, voteStatus);
-                    }
-                    break;
-                case -1:
-                    if (vote.getVoice() == 1) {
-                        threadService.vote(thread.getId(), user.getId(), 2, voteStatus);
-                    }
-                    break;
-            }
-
-            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadBySlug(thread.getSlug()));
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find user by nickname: " + thread.getAuthor()));
         }
+
+        threadService.vote(thread, vote);
+
+        if (isSlug)
+            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadBySlug(thread.getSlug()));
+        else
+            return ResponseEntity.status(HttpStatus.OK).body(threadService.getThreadByID(thread.getId()));
     }
 
     @GetMapping(value = "api/thread/{slug_or_id}/details")

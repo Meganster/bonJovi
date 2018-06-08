@@ -7,14 +7,15 @@ import java.sql.Timestamp;
 
 public class Post {
     private String author;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private Timestamp created;
+    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private String created;
     private String forum;
     private Integer id;
     private Boolean isEdited;
     private String message;
     private Integer parent;
     private Integer thread;
+    private Object[] path;
 
     public Integer getId() {
         return id;
@@ -44,7 +45,7 @@ public class Post {
         return thread;
     }
 
-    public Timestamp getCreated() {
+    public String getCreated() {
         return created;
     }
 
@@ -78,6 +79,6 @@ public class Post {
     }
 
     public void setCreated(Timestamp created) {
-        this.created = created;
+        this.created = created.toInstant().toString();
     }
 }

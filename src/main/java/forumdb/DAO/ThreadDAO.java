@@ -2,14 +2,19 @@ package forumdb.DAO;
 
 
 import forumdb.Model.Thread;
+import forumdb.Model.Vote;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -21,41 +26,25 @@ public class ThreadDAO {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+
+    @Transactional
     public void createThread(@NotNull Thread thread) throws DataAccessException {
-        List<String> existFieldsNames = new ArrayList<>();
-        List<Object> existFieldsTypes = new ArrayList<>();
+        final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
-        final Class checkedThread = Thread.class;
-        for (Field field : checkedThread.getDeclaredFields()) {
-            field.setAccessible(true);
+        jdbcTemplate.update(con -> {
+            final PreparedStatement pst = con.prepareStatement(
+                    "INSERT INTO Thread(title, author, forum, message, slug, created)"
+                            + " VALUES (?,?,?,?,?,?::timestamptz);",
+                    PreparedStatement.RETURN_GENERATED_KEYS);
+            pst.setString(1, thread.getTitle());
+            pst.setString(2, thread.getAuthor());
+            pst.setString(3, thread.getForum());
+            pst.setString(4, thread.getMessage());
+            pst.setString(5, thread.getSlug());
+            pst.setString(6, thread.getCreated());
 
-            try {
-                if (field.get(thread) != null) {
-                    existFieldsNames.add(field.getName());
-                    existFieldsTypes.add(field.getType().cast(field.get(thread)));
-                }
-            } catch (IllegalAccessException error) {
-                System.out.println(error);
-            }
-        }
-
-        final StringBuilder sqlNameRows = new StringBuilder();
-        final StringBuilder sqlParameters = new StringBuilder();
-
-        for (String nameRow : existFieldsNames) {
-            sqlNameRows.append(nameRow).append(", ");
-        }
-
-        for (Object valueRow : existFieldsTypes) {
-            sqlParameters.append(" '").append(valueRow.toString()).append("', ");
-        }
-
-        sqlNameRows.delete(sqlNameRows.length() - 2, sqlNameRows.length());
-        sqlParameters.delete(sqlParameters.length() - 2, sqlParameters.length());
-
-        final StringBuilder sql = new StringBuilder();
-        sql.append("INSERT INTO Thread (").append(sqlNameRows).append(") VALUES (").append(sqlParameters).append(");");
-        jdbcTemplate.update(sql.toString());
+            return pst;
+        }, keyHolder);
     }
 
     public Thread getThread(@NotNull String nickname, @NotNull String slugForum, @NotNull String title) {
@@ -113,17 +102,27 @@ public class ThreadDAO {
         }
     }
 
-    public void vote(@NotNull Integer threadID, @NotNull Integer userID,
-                     @NotNull Integer key, @NotNull Integer voteStatus) throws DataAccessException {
-        jdbcTemplate.update("UPDATE Thread SET votes = votes + ? WHERE id = ?;", key, threadID);
+//    @Transactional(isolation = Isolation.READ_COMMITTED)
+//    public void vote(@NotNull Integer threadID, @NotNull Integer userID,
+//                     @NotNull Integer key, @NotNull Integer voteStatus) throws DataAccessException {
+//        jdbcTemplate.update("UPDATE Thread SET votes = votes + ? WHERE id = ?;", key, threadID);
+//
+//        if (voteStatus == 0) {
+//            jdbcTemplate.update("INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?);",
+//                    userID, threadID, key);
+//        } else {
+//            jdbcTemplate.update("UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?;",
+//                    key, threadID, userID);
+//        }
+//    }
 
-        if (voteStatus == 0) {
-            jdbcTemplate.update("INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?);",
-                    userID, threadID, key);
-        } else {
-            jdbcTemplate.update("UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?;",
-                    key, threadID, userID);
-        }
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void vote(Thread thread, Vote vote) {
+            final String sql = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) " +
+                    "SELECT( SELECT id FROM \"User\" WHERE nickname=?) AS uid, " +
+                    "?, ? ON CONFLICT (user_id, thread_id) " +
+                    "DO UPDATE SET vote = EXCLUDED.vote;";
+            jdbcTemplate.update(sql, vote.getNickname(), thread.getId(), vote.getVoice());
     }
 
     public void update(@NotNull Integer threadID, @NotNull Thread changedThread) {

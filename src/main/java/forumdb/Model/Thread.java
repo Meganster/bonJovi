@@ -7,8 +7,7 @@ import java.sql.Timestamp;
 
 public class Thread {
     private String author;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private Timestamp created;
+    private String created;
     private String forum;
     private Integer id;
     private String message;
@@ -16,7 +15,7 @@ public class Thread {
     private String slug;
     private Integer votes;
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
@@ -72,11 +71,11 @@ public class Thread {
         this.slug = slug;
     }
 
-    public Timestamp getCreated() {
+    public String getCreated() {
         return created;
     }
 
     public void setCreated(Timestamp created) {
-        this.created = created;
+        this.created = created.toInstant().toString();
     }
 }

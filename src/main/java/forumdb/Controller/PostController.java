@@ -43,14 +43,14 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
         }
 
+
         try {
             final Forum forum = forumService.getForum(thread.getForum());
             final Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-            final Integer oldMaxPostID = postService.getMaxPostId();
 
             for (Post post : posts) {
                 if (post.getForum() != null) {
-                    if (post.getForum() != thread.getForum()) {
+                    if (!post.getForum().equals(thread.getForum())) {
                         return ResponseEntity.status(HttpStatus.CONFLICT).body(postService.getPostBySlugForum(thread.getForum()));
                     }
                 }
@@ -68,13 +68,16 @@ public class PostController {
                 final Integer parentId = post.getParent();
                 if (parentId != null && !parentId.equals(0)) {
                     postService.getParentPost(parentId, thread.getId());
+                } else {
+                    post.setParent(0);
                 }
 
-                postService.createPost(post);
+                final Integer postID = postService.createPost(post);
+                post.setId(postID);
             }
 
             forumService.upNumberOfPosts(forum.getSlug(), posts.size());
-            return ResponseEntity.status(HttpStatus.CREATED).body(postService.getNewPosts(oldMaxPostID));
+            return ResponseEntity.status(HttpStatus.CREATED).body(posts);
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
         }
@@ -156,11 +159,6 @@ public class PostController {
         }
 
         if (sort.equals("parent_tree")) {
-            //System.out.println("DESC = " + desc);
-            //System.out.println("limit = " + limit);
-            //System.out.println("since = " + since);
-            //System.out.println("sort = " + sort);
-            //System.out.println("threadID = " + thread.getId());
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
