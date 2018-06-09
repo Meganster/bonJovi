@@ -76,7 +76,7 @@ public class PostController {
                 post.setId(postID);
             }
 
-            forumService.upNumberOfPosts(forum.getSlug(), posts.size());
+            //forumService.upNumberOfPosts(forum.getSlug(), posts.size());
             return ResponseEntity.status(HttpStatus.CREATED).body(posts);
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));

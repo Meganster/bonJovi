@@ -24,7 +24,6 @@ public class ServiceDAO {
     }
 
     public void clear() throws DataAccessException {
-        jdbcTemplate.update("DELETE FROM \"User\"; DELETE FROM Forum; DELETE FROM Thread;" +
-                " DELETE FROM Post; DELETE FROM UserVoteForThreads;");
+        jdbcTemplate.update("TRUNCATE \"User\", Forum, Thread, Post, UserVoteForThreads CASCADE;");
     }
 }

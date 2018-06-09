@@ -1,8 +1,6 @@
 package forumdb.Model;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.sql.Timestamp;
 
 public class Thread {

@@ -1,6 +1,7 @@
 package forumdb.Model;
 
 public class Forum {
+    private Integer id;
     private String title;
     private String user;
     private String slug;
@@ -25,6 +26,14 @@ public class Forum {
 
     //simple constructor
     public Forum() {
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setTitle(String title) {

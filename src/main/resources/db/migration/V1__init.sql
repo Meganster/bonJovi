@@ -4,6 +4,7 @@
 -- DROP TABLE Post CASCADE;
 -- DROP TABLE UserVoteForThreads CASCADE;
 -- DROP TABLE schema_version CASCADE;
+-- DROP TABLE ForumUsers CASCADE;
 
 CREATE EXTENSION IF NOT EXISTS citext;
 
@@ -32,7 +33,8 @@ CREATE TABLE Thread (
   message TEXT,
   votes INTEGER DEFAULT 0,
   slug CITEXT UNIQUE DEFAULT NULL,
-  created TIMESTAMPTZ DEFAULT now()
+  created TIMESTAMPTZ DEFAULT now(),
+  forum_id INTEGER -- нужно для инкрементов
 );
 
 CREATE TABLE Post (
@@ -43,7 +45,8 @@ CREATE TABLE Post (
   author CITEXT COLLATE "ucs_basic" REFERENCES "User" (nickname) ON DELETE CASCADE,
   parent INTEGER DEFAULT 0,
   message TEXT,
-  isEdited BOOLEAN DEFAULT FALSE
+  isEdited BOOLEAN DEFAULT FALSE,
+  forum_id  INTEGER  -- нужно для инкрементов
 --   path int []
 );
 
@@ -55,6 +58,89 @@ CREATE TABLE UserVoteForThreads (
   UNIQUE (user_id, thread_id)
 );
 
+CREATE TABLE ForumUsers (
+  id  SERIAL PRIMARY KEY,
+  email CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
+  fullname VARCHAR(256) NOT NULL,
+  nickname CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
+  about TEXT,
+  forum_id INTEGER,
+  UNIQUE (forum_id, nickname)
+);
+
+-- increment thread count --
+CREATE OR REPLACE FUNCTION increment_forum_threads_procedure()
+  RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  new.forum_id = (SELECT id
+                 FROM Forum
+                 WHERE Forum.slug=new.forum);
+  UPDATE Forum
+  SET threads = threads + 1
+  WHERE forum.id = new.forum_id;
+  INSERT INTO ForumUsers(nickname, fullname, email, about, forum_id)
+    (SELECT
+       new.author,
+       U.fullname,
+       U.email,
+       U.about,
+       new.forum_id
+     FROM "User" U
+     WHERE new.author=U.nickname)
+  ON CONFLICT DO NOTHING;
+  RETURN new;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS increment_forum_threads
+ON Thread;
+
+CREATE TRIGGER increment_forum_threads
+BEFORE INSERT
+  ON Thread
+FOR EACH ROW
+EXECUTE PROCEDURE increment_forum_threads_procedure();
+-- --- --
+
+-- increment post count --
+CREATE OR REPLACE FUNCTION increment_forum_posts_procedure()
+  RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  new.forum_id = (SELECT id
+                 FROM Forum
+                 WHERE Forum.slug=new.forum);
+  UPDATE Forum
+  SET posts = posts + 1
+  WHERE forum.id = new.forum_id;
+  INSERT INTO ForumUsers(nickname, fullname, email, about, forum_id)
+    (SELECT
+       new.author,
+       U.fullname,
+       U.email,
+       U.about,
+       new.forum_id
+     FROM "User" U
+     WHERE new.author=U.nickname)
+  ON CONFLICT DO NOTHING;
+  RETURN new;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS increment_forum_posts
+ON Post;
+
+CREATE TRIGGER increment_forum_posts
+BEFORE INSERT
+  ON Post
+FOR EACH ROW
+EXECUTE PROCEDURE increment_forum_posts_procedure();
+-- --- --
+
+-- Vote part --
 CREATE OR REPLACE FUNCTION vote()
   RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -87,3 +173,6 @@ CREATE TRIGGER vote_trigger
   ON UserVoteForThreads
   FOR EACH ROW
 EXECUTE PROCEDURE vote();
+-- --- --
+
+

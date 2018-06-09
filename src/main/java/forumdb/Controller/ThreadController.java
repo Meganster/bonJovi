@@ -44,7 +44,7 @@ public class ThreadController {
             }
 
             threadService.createThread(thread);
-            forumService.upNumberOfThreads(forum.getSlug());
+            //forumService.upNumberOfThreads(forum.getSlug());
             return ResponseEntity.status(HttpStatus.CREATED).body(threadService.getThread(thread.getAuthor(), slug, thread.getTitle()));
         } catch (DataAccessException error) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThreadBySlug(thread.getSlug()));
