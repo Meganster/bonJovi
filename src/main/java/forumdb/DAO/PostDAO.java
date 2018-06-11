@@ -17,12 +17,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class PostDAO {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    //@Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createPost(Post post) {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 

@@ -19,13 +19,14 @@ import java.sql.SQLException;
 import java.util.List;
 
 
+@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ThreadDAO {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    //@Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createThread(@NotNull Thread thread) throws DataAccessException {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -89,7 +90,7 @@ public class ThreadDAO {
         }
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    //@Transactional(isolation = Isolation.READ_COMMITTED)
     public void vote(Thread thread, Vote vote) {
             final String sql = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) " +
                     "SELECT( SELECT id FROM \"User\" WHERE nickname=?) AS uid, " +

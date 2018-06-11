@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ForumDAO {
 
@@ -34,7 +35,6 @@ public class ForumDAO {
                 new Object[]{slug}, new ForumMapper());
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<User> getUsers(@NotNull Integer forum_id, @NotNull Integer limit,
                                @NotNull String since, @NotNull Boolean desc) {
         try {
