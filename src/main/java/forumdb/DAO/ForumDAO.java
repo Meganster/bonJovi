@@ -34,43 +34,6 @@ public class ForumDAO {
                 new Object[]{slug}, new ForumMapper());
     }
 
-//    TODO удалить мусор
-//    public void upNumberOfThreads(@NotNull String slug) {
-//        jdbcTemplate.update("UPDATE Forum SET threads = threads + 1 WHERE slug = ?::citext;", slug);
-//    }
-
-//    public void upNumberOfPosts(@NotNull String slug, @NotNull Integer numberOfPost) {
-//        jdbcTemplate.update("UPDATE Forum SET posts = posts + ? WHERE slug = ?;",
-//                numberOfPost, slug);
-//    }
-
-//    public List<User> getUsers(@NotNull String slugForum, @NotNull Integer limit,
-//                               @NotNull String since, @NotNull Boolean desc) {
-//        final StringBuilder sql = new StringBuilder("SELECT * FROM \"User\" WHERE \"User\".nickname IN " +
-//                "(SELECT POST.author FROM POST WHERE POST.forum='" + slugForum + "'::citext " +
-//                "UNION " +
-//                "SELECT Thread.author FROM Thread WHERE Thread.forum='" + slugForum + "'::citext)");
-//
-//        if (!since.isEmpty()) {
-//            if (desc == true) {
-//                sql.append(" AND \"User\".nickname < '").append(since).append("'::citext");
-//            } else {
-//                sql.append(" AND \"User\".nickname > '").append(since).append("'::citext");
-//            }
-//        }
-//
-//        sql.append(" ORDER BY LOWER(\"User\".nickname)");
-//        if (desc) {
-//            sql.append(" DESC");
-//        }
-//
-//        if (limit > 0) {
-//            sql.append(" LIMIT ").append(limit);
-//        }
-//
-//        return jdbcTemplate.query(sql.toString(), new UserDAO.UserMapper());
-//    }
-
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<User> getUsers(@NotNull Integer forum_id, @NotNull Integer limit,
                                @NotNull String since, @NotNull Boolean desc) {

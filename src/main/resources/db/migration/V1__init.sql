@@ -46,8 +46,8 @@ CREATE TABLE Post (
   parent INTEGER DEFAULT 0,
   message TEXT,
   isEdited BOOLEAN DEFAULT FALSE,
-  forum_id  INTEGER  -- нужно для инкрементов
---   path int []
+  forum_id  INTEGER,  -- нужно для инкрементов
+  path INT []
 );
 
 CREATE TABLE UserVoteForThreads (

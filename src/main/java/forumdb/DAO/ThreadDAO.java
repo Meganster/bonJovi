@@ -13,11 +13,9 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
-import java.lang.reflect.Field;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -90,29 +88,6 @@ public class ThreadDAO {
             return null;
         }
     }
-
-//    public Integer getVote(@NotNull Integer userID, @NotNull Integer threadID) {
-//        try {
-//            return jdbcTemplate.queryForObject("SELECT vote FROM UserVoteForThreads WHERE user_id = ? AND thread_id = ?;",
-//                    new Object[]{userID, threadID}, Integer.class);
-//        } catch (DataAccessException e) {
-//            return null;
-//        }
-//    }
-
-//    @Transactional(isolation = Isolation.READ_COMMITTED)
-//    public void vote(@NotNull Integer threadID, @NotNull Integer userID,
-//                     @NotNull Integer key, @NotNull Integer voteStatus) throws DataAccessException {
-//        jdbcTemplate.update("UPDATE Thread SET votes = votes + ? WHERE id = ?;", key, threadID);
-//
-//        if (voteStatus == 0) {
-//            jdbcTemplate.update("INSERT INTO UserVoteForThreads (user_id, thread_id, vote) VALUES (?, ?, ?);",
-//                    userID, threadID, key);
-//        } else {
-//            jdbcTemplate.update("UPDATE UserVoteForThreads SET vote = ? WHERE thread_id = ? AND user_id = ?;",
-//                    key, threadID, userID);
-//        }
-//    }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void vote(Thread thread, Vote vote) {

@@ -66,17 +66,25 @@ public class PostController {
                 }
 
                 final Integer parentId = post.getParent();
+                Boolean isRoot = false;
                 if (parentId != null && !parentId.equals(0)) {
                     postService.getParentPost(parentId, thread.getId());
                 } else {
+                    isRoot = true;
                     post.setParent(0);
                 }
 
                 final Integer postID = postService.createPost(post);
                 post.setId(postID);
+
+                if (isRoot == true) {
+                    postService.addPostToPathSelf(post);
+                } else {
+                    final Post parentPost = postService.getPostById(post.getParent());
+                    postService.addPostToPath(parentPost, post);
+                }
             }
 
-            //forumService.upNumberOfPosts(forum.getSlug(), posts.size());
             return ResponseEntity.status(HttpStatus.CREATED).body(posts);
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));

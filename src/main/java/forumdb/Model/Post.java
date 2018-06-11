@@ -1,13 +1,10 @@
 package forumdb.Model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.sql.Timestamp;
 
 
 public class Post {
     private String author;
-    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
     private String created;
     private String forum;
     private Integer id;
@@ -80,5 +77,13 @@ public class Post {
 
     public void setCreated(Timestamp created) {
         this.created = created.toInstant().toString();
+    }
+
+    public Object[] getPath() {
+        return path;
+    }
+
+    public void setPath(Object[] path) {
+        this.path = path;
     }
 }
