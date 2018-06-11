@@ -28,7 +28,7 @@ public class ThreadController {
 
     @PostMapping(value = "/api/forum/{slug}/create")
     public ResponseEntity<?> createThread(@PathVariable("slug") String slug, @RequestBody Thread thread) {
-        Forum forum;
+        final Forum forum;
 
         try {
             forum = forumService.getForum(slug);
@@ -39,13 +39,17 @@ public class ThreadController {
 
         try {
             thread.setForum(forum.getSlug());
+            thread.setVotes(0);
+
             if(thread.getCreated() == null){
                 thread.setCreated(new Timestamp(System.currentTimeMillis()));
             }
 
-            threadService.createThread(thread);
-            //forumService.upNumberOfThreads(forum.getSlug());
-            return ResponseEntity.status(HttpStatus.CREATED).body(threadService.getThread(thread.getAuthor(), slug, thread.getTitle()));
+            final Integer threadID = threadService.createThread(thread);
+            thread.setId(threadID);
+            //thread.setForum(forum.getSlug());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(thread);
         } catch (DataAccessException error) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThreadBySlug(thread.getSlug()));
         }

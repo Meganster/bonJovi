@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
@@ -25,7 +26,7 @@ public class PostDAO {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Integer createPost(Post post) {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -48,14 +49,14 @@ public class PostDAO {
         return keyHolder.getKey().intValue();
     }
 
-    public Integer getMaxPostId() {
-        final Integer maxID = jdbcTemplate.queryForObject("SELECT max(id) FROM Post;", Integer.class);
-        if (maxID == null) {
-            return 0;
-        } else {
-            return maxID;
-        }
-    }
+//    public Integer getMaxPostId() {
+////        final Integer maxID = jdbcTemplate.queryForObject("SELECT max(id) FROM Post;", Integer.class);
+////        if (maxID == null) {
+////            return 0;
+////        } else {
+////            return maxID;
+////        }
+////    }
 
     public Post getParentPost(@NotNull Integer postID, @NotNull Integer threadID) {
         return jdbcTemplate.queryForObject("SELECT * FROM Post WHERE thread = ? AND id = ? ORDER BY id;",
@@ -74,11 +75,11 @@ public class PostDAO {
         return jdbcTemplate.queryForObject(sql.toString(), new PostMapper());
     }
 
-    public List<Post> getNewPosts(@NotNull Integer id) {
-        final StringBuilder sql = new StringBuilder();
-        sql.append("SELECT * FROM Post WHERE id > ").append(id).append(" ORDER BY id;");
-        return jdbcTemplate.query(sql.toString(), new PostMapper());
-    }
+//    public List<Post> getNewPosts(@NotNull Integer id) {
+//        final StringBuilder sql = new StringBuilder();
+//        sql.append("SELECT * FROM Post WHERE id > ").append(id).append(" ORDER BY id;");
+//        return jdbcTemplate.query(sql.toString(), new PostMapper());
+//    }
 
     public void update(@NotNull Post post, @NotNull Post changedPost) {
         final String message = changedPost.getMessage();

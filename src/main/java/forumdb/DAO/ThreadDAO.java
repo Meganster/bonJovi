@@ -27,30 +27,27 @@ public class ThreadDAO {
     JdbcTemplate jdbcTemplate;
 
 
-    @Transactional
-    public void createThread(@NotNull Thread thread) throws DataAccessException {
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Integer createThread(@NotNull Thread thread) throws DataAccessException {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
             final PreparedStatement pst = con.prepareStatement(
-                    "INSERT INTO Thread(title, author, forum, message, slug, created)"
-                            + " VALUES (?,?,?,?,?,?::timestamptz);",
+                    "INSERT INTO Thread(title, author, forum, message, slug, votes, created)"
+                            + " VALUES (?, ?, ?, ?, ?, ?, ?::timestamptz) returning id;",
                     PreparedStatement.RETURN_GENERATED_KEYS);
             pst.setString(1, thread.getTitle());
             pst.setString(2, thread.getAuthor());
             pst.setString(3, thread.getForum());
             pst.setString(4, thread.getMessage());
             pst.setString(5, thread.getSlug());
-            pst.setString(6, thread.getCreated());
+            pst.setInt(6, thread.getVotes());
+            pst.setString(7, thread.getCreated());
 
             return pst;
         }, keyHolder);
-    }
 
-    public Thread getThread(@NotNull String nickname, @NotNull String slugForum, @NotNull String title) {
-        return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE author = ?::CITEXT " +
-                        "AND forum = ?::CITEXT AND title = ?;",
-                new Object[]{nickname, slugForum, title}, new ThreadMapper());
+        return keyHolder.getKey().intValue();
     }
 
     public List<Thread> getThreads(@NotNull String slugForum,
@@ -72,6 +69,7 @@ public class ThreadDAO {
         if (limit > 0) {
             sql.append(" LIMIT ").append(limit);
         }
+
         return jdbcTemplate.query(sql.toString(), new ThreadMapper());
     }
 
@@ -93,14 +91,14 @@ public class ThreadDAO {
         }
     }
 
-    public Integer getVote(@NotNull Integer userID, @NotNull Integer threadID) {
-        try {
-            return jdbcTemplate.queryForObject("SELECT vote FROM UserVoteForThreads WHERE user_id = ? AND thread_id = ?;",
-                    new Object[]{userID, threadID}, Integer.class);
-        } catch (DataAccessException e) {
-            return null;
-        }
-    }
+//    public Integer getVote(@NotNull Integer userID, @NotNull Integer threadID) {
+//        try {
+//            return jdbcTemplate.queryForObject("SELECT vote FROM UserVoteForThreads WHERE user_id = ? AND thread_id = ?;",
+//                    new Object[]{userID, threadID}, Integer.class);
+//        } catch (DataAccessException e) {
+//            return null;
+//        }
+//    }
 
 //    @Transactional(isolation = Isolation.READ_COMMITTED)
 //    public void vote(@NotNull Integer threadID, @NotNull Integer userID,
