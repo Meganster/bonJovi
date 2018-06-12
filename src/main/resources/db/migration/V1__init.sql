@@ -13,14 +13,14 @@ CREATE TABLE "User" (
   email CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
   fullname VARCHAR(256) NOT NULL,
   nickname CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
-  about TEXT
+  about CITEXT
 );
 
 CREATE TABLE Forum (
   id SERIAL PRIMARY KEY,
   title VARCHAR(256),
-  posts INTEGER DEFAULT 0,
-  threads INTEGER DEFAULT 0,
+  posts BIGINT DEFAULT 0,
+  threads BIGINT DEFAULT 0,
   slug CITEXT COLLATE "ucs_basic" NOT NULL UNIQUE,
   "user" CITEXT COLLATE "ucs_basic" NOT NULL REFERENCES "User" (nickname) ON DELETE CASCADE
 );
@@ -31,7 +31,7 @@ CREATE TABLE Thread (
   author CITEXT COLLATE "ucs_basic" NOT NULL REFERENCES "User" (nickname) ON DELETE CASCADE,
   forum CITEXT NOT NULL REFERENCES Forum (slug) ON DELETE CASCADE,
   message TEXT,
-  votes INTEGER DEFAULT 0,
+  votes BIGINT DEFAULT 0,
   slug CITEXT UNIQUE DEFAULT NULL,
   created TIMESTAMPTZ DEFAULT now(),
   forum_id INTEGER -- нужно для инкрементов
@@ -63,7 +63,7 @@ CREATE TABLE ForumUsers (
   email CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
   fullname VARCHAR(256) NOT NULL,
   nickname CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
-  about TEXT,
+  about CITEXT,
   forum_id INTEGER,
   UNIQUE (forum_id, nickname)
 );

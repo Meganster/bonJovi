@@ -33,7 +33,7 @@ public class PostController {
 
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);
@@ -65,17 +65,17 @@ public class PostController {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
                 }
 
-                final Integer parentId = post.getParent();
+                final Long parentId = post.getParent();
                 Boolean isRoot = false;
                 if (parentId != null && !parentId.equals(0)) {
                     postService.getParentPost(parentId, thread.getId());
                 } else {
                     isRoot = true;
-                    post.setParent(0);
+                    post.setParent(0L);
                 }
                 post.setForumID(thread.getForumID());
 
-                final Integer postID = postService.createPost(post);
+                final Long postID = postService.createPost(post);
                 post.setId(postID);
 
                 if (isRoot == true) {
@@ -93,7 +93,7 @@ public class PostController {
     }
 
     @PostMapping(value = "api/post/{id}/details")
-    public ResponseEntity<?> updatePost(@PathVariable("id") Integer id, @RequestBody Post changedPost) {
+    public ResponseEntity<?> updatePost(@PathVariable("id") Long id, @RequestBody Post changedPost) {
         final Post post;
         try {
             post = postService.getPostById(id);
@@ -106,7 +106,7 @@ public class PostController {
     }
 
     @GetMapping(value = "api/post/{id}/details")
-    public ResponseEntity<?> getPostDetails(@PathVariable("id") Integer id,
+    public ResponseEntity<?> getPostDetails(@PathVariable("id") Long id,
                                             @RequestParam(value = "related", defaultValue = "") String[] related) {
 
         final Post post;
@@ -141,14 +141,14 @@ public class PostController {
 
     @GetMapping(value = "api/thread/{slug_or_id}/posts")
     public ResponseEntity<?> getPosts(@PathVariable("slug_or_id") String slugOrId,
-                                      @RequestParam(value = "since", defaultValue = "0") Integer since,
+                                      @RequestParam(value = "since", defaultValue = "0") Long since,
                                       @RequestParam(value = "limit", defaultValue = "0") Integer limit,
                                       @RequestParam(value = "sort", defaultValue = "flat") String sort,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
 
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);

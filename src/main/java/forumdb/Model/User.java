@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 public class User {
-    private Integer id;
+    private Long id;
     private String about;
     private String email;
     private String fullname;
@@ -20,6 +20,7 @@ public class User {
     }
 
     public User(User user) {
+        this.id = user.id;
         this.nickname = user.nickname;
         this.fullname = user.fullname;
         this.about = user.about;
@@ -30,7 +31,7 @@ public class User {
 
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
@@ -50,7 +51,7 @@ public class User {
         return email;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -68,16 +69,5 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public ObjectNode toObjectNode(ObjectMapper mapper) {
-        final ObjectNode result = mapper.createObjectNode();
-        result.put("about", about);
-        result.put("email", email);
-        result.put("fullname", fullname);
-        result.put("nickname", nickname);
-        result.put("id", id);
-
-        return result;
     }
 }

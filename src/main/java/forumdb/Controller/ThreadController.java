@@ -39,13 +39,13 @@ public class ThreadController {
 
         try {
             thread.setForum(forum.getSlug());
-            thread.setVotes(0);
+            thread.setVotes(0L);
 
             if(thread.getCreated() == null){
                 thread.setCreated(new Timestamp(System.currentTimeMillis()));
             }
 
-            final Integer threadID = threadService.createThread(thread);
+            final Long threadID = threadService.createThread(thread);
             thread.setId(threadID);
             //thread.setForum(forum.getSlug());
 
@@ -60,7 +60,7 @@ public class ThreadController {
         Boolean isSlug = false;
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
             isSlug = false;
         } catch (NumberFormatException e) {
@@ -90,7 +90,7 @@ public class ThreadController {
     public ResponseEntity<?> getDetails(@PathVariable("slug_or_id") String slugOrId) {
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);
@@ -107,7 +107,7 @@ public class ThreadController {
     public ResponseEntity<?> updateThread(@PathVariable("slug_or_id") String slugOrId, @RequestBody Thread changedThread) {
         Thread thread;
         try {
-            final int threadID = Integer.parseInt(slugOrId);
+            final Long threadID = Long.parseLong(slugOrId);
             thread = threadService.getThreadByID(threadID);
         } catch (NumberFormatException e) {
             thread = threadService.getThreadBySlug(slugOrId);

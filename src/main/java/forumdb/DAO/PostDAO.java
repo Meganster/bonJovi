@@ -25,7 +25,7 @@ public class PostDAO {
     private JdbcTemplate jdbcTemplate;
 
     //@Transactional(isolation = Isolation.READ_COMMITTED)
-    public Integer createPost(Post post) {
+    public Long createPost(Post post) {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
@@ -35,16 +35,16 @@ public class PostDAO {
                     PreparedStatement.RETURN_GENERATED_KEYS);
             pst.setString(1, post.getCreated());
             pst.setString(2, post.getForum());
-            pst.setInt(3, post.getThread());
+            pst.setLong(3, post.getThread());
             pst.setString(4, post.getAuthor());
-            pst.setInt(5, post.getParent());
+            pst.setLong(5, post.getParent());
             pst.setString(6, post.getMessage());
-            pst.setInt(7, post.getForumID());
+            pst.setLong(7, post.getForumID());
 
             return pst;
         }, keyHolder);
 
-        return keyHolder.getKey().intValue();
+        return keyHolder.getKey().longValue();
     }
 
     public void addPostToPath(Post parent, Post post) {
@@ -56,7 +56,7 @@ public class PostDAO {
             array.add(post.getId());
 
             pst.setArray(1, con.createArrayOf("INT", array.toArray()));
-            pst.setInt(2, post.getId());
+            pst.setLong(2, post.getId());
 
             return pst;
         });
@@ -68,13 +68,13 @@ public class PostDAO {
                     "UPDATE Post SET path = ?  WHERE id = ?;");
 
             pst.setArray(1, con.createArrayOf("INT", new Object[]{post.getId()}));
-            pst.setInt(2, post.getId());
+            pst.setLong(2, post.getId());
 
             return pst;
         });
     }
 
-    public Post getParentPost(@NotNull Integer postID, @NotNull Integer threadID) {
+    public Post getParentPost(@NotNull Long postID, @NotNull Long threadID) {
         return jdbcTemplate.queryForObject("SELECT * FROM Post WHERE thread = ? AND id = ? ORDER BY id;",
                 new Object[]{threadID, postID}, new PostMapper());
     }
@@ -85,7 +85,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
-    public Post getPostById(@NotNull Integer id) {
+    public Post getPostById(@NotNull Long id) {
         final StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM Post WHERE id = ").append(id).append(";");
 
@@ -101,7 +101,7 @@ public class PostDAO {
         jdbcTemplate.update("UPDATE Post SET message = ?, isEdited = TRUE WHERE id = ?;", message, post.getId());
     }
 
-    public List<Post> getFlatSortForPosts(@NotNull Integer threadID, @NotNull Integer since,
+    public List<Post> getFlatSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                           @NotNull Integer limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID);
 
@@ -127,7 +127,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
-    public List<Post> getTreeSortForPosts(@NotNull Integer threadID, @NotNull Integer since,
+    public List<Post> getTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                           @NotNull Integer limit, @NotNull Boolean desc) {
         List<Object> myObj = new ArrayList<>();
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID);
@@ -155,7 +155,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
-    public List<Post> getParentTreeSortForPosts(@NotNull Integer threadID, @NotNull Integer since,
+    public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                                 @NotNull Integer limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post JOIN ");
 
@@ -214,13 +214,13 @@ public class PostDAO {
             final Post post = new Post();
             post.setForum(resultSet.getString("forum"));
             post.setAuthor(resultSet.getString("author"));
-            post.setThread(resultSet.getInt("thread"));
+            post.setThread(resultSet.getLong("thread"));
             post.setCreated(resultSet.getTimestamp("created"));
             post.setMessage(resultSet.getString("message"));
             post.setIsEdited(resultSet.getBoolean("isEdited"));
-            post.setParent(resultSet.getInt("parent"));
-            post.setId(resultSet.getInt("id"));
-            post.setForumID(resultSet.getInt("forum_id"));
+            post.setParent(resultSet.getLong("parent"));
+            post.setId(resultSet.getLong("id"));
+            post.setForumID(resultSet.getLong("forum_id"));
 
             try {
                 post.setPath((Object[]) resultSet.getArray("path").getArray());

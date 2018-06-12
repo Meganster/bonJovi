@@ -1,38 +1,22 @@
 package forumdb.Model;
 
 public class Forum {
-    private Integer id;
+    private Long id;
     private String title;
     private String user;
     private String slug;
-    private Integer posts;
-    private Integer threads;
-
-    /*//full constructor
-    public Forum(String title, String user, String slug, Integer posts, Integer threads) {
-        this.title = title;
-        this.user = user;
-        this.slug = slug;
-        this.posts = posts;
-        this.threads = threads;
-    }
-
-    //min constructor
-    public Forum(String title, String user, String slug) {
-        this.title = title;
-        this.user = user;
-        this.slug = slug;
-    }*/
+    private Long posts;
+    private Long threads;
 
     //simple constructor
     public Forum() {
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -48,11 +32,11 @@ public class Forum {
         this.slug = slug;
     }
 
-    public void setPosts(Integer posts) {
+    public void setPosts(Long posts) {
         this.posts = posts;
     }
 
-    public void setThreads(Integer threads) {
+    public void setThreads(Long threads) {
         this.threads = threads;
     }
 
@@ -69,11 +53,11 @@ public class Forum {
         return slug;
     }
 
-    public Integer getPosts() {
+    public Long getPosts() {
         return posts;
     }
 
-    public Integer getThreads() {
+    public Long getThreads() {
         return threads;
     }
 }

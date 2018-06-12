@@ -27,7 +27,7 @@ public class ThreadDAO {
 
 
     //@Transactional(isolation = Isolation.READ_COMMITTED)
-    public Integer createThread(@NotNull Thread thread) throws DataAccessException {
+    public Long createThread(@NotNull Thread thread) throws DataAccessException {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(con -> {
@@ -40,13 +40,13 @@ public class ThreadDAO {
             pst.setString(3, thread.getForum());
             pst.setString(4, thread.getMessage());
             pst.setString(5, thread.getSlug());
-            pst.setInt(6, thread.getVotes());
+            pst.setLong(6, thread.getVotes());
             pst.setString(7, thread.getCreated());
 
             return pst;
         }, keyHolder);
 
-        return keyHolder.getKey().intValue();
+        return keyHolder.getKey().longValue();
     }
 
     public List<Thread> getThreads(@NotNull String slugForum,
@@ -72,7 +72,7 @@ public class ThreadDAO {
         return jdbcTemplate.query(sql.toString(), new ThreadMapper());
     }
 
-    public Thread getThreadByID(@NotNull Integer id) {
+    public Thread getThreadByID(@NotNull Long id) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE id = ?;",
                     new Object[]{id}, new ThreadMapper());
@@ -99,7 +99,7 @@ public class ThreadDAO {
             jdbcTemplate.update(sql, vote.getNickname(), thread.getId(), vote.getVoice());
     }
 
-    public void update(@NotNull Integer threadID, @NotNull Thread changedThread) {
+    public void update(@NotNull Long threadID, @NotNull Thread changedThread) {
         final StringBuilder sql = new StringBuilder("UPDATE Thread");
 
         final String title = changedThread.getTitle();
@@ -141,9 +141,9 @@ public class ThreadDAO {
             thread.setForum(resultSet.getString("forum"));
             thread.setMessage(resultSet.getString("message"));
             thread.setCreated(resultSet.getTimestamp("created"));
-            thread.setId(resultSet.getInt("id"));
-            thread.setVotes(resultSet.getInt("votes"));
-            thread.setForumID(resultSet.getInt("forum_id"));
+            thread.setId(resultSet.getLong("id"));
+            thread.setVotes(resultSet.getLong("votes"));
+            thread.setForumID(resultSet.getLong("forum_id"));
 
             return thread;
         }

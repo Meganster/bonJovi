@@ -2,48 +2,48 @@ package forumdb.Model;
 
 
 public class InfoAboutDB {
-    int forum;
-    int post;
-    int thread;
-    int user;
+    Long forum;
+    Long post;
+    Long thread;
+    Long user;
 
     public InfoAboutDB() {
-        user = 0;
-        forum = 0;
-        post = 0;
-        thread = 0;
+        user = 0L;
+        forum = 0L;
+        post = 0L;
+        thread = 0L;
     }
 
-    public int getForum() {
+    public Long getForum() {
         return forum;
     }
 
-    public int getUser() {
+    public Long getUser() {
         return user;
     }
 
-    public int getPost() {
+    public Long getPost() {
         return post;
     }
 
-    public int getThread() {
+    public Long getThread() {
         return thread;
     }
 
 
-    public void setForum(int countForums) {
+    public void setForum(Long countForums) {
         this.forum = countForums;
     }
 
-    public void setPost(int countPosts) {
+    public void setPost(Long countPosts) {
         this.post = countPosts;
     }
 
-    public void setThread(int countThreads) {
+    public void setThread(Long countThreads) {
         this.thread = countThreads;
     }
 
-    public void setUser(int countUsers) {
+    public void setUser(Long countUsers) {
         this.user = countUsers;
     }
 }

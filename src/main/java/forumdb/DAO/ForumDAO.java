@@ -35,7 +35,7 @@ public class ForumDAO {
                 new Object[]{slug}, new ForumMapper());
     }
 
-    public List<User> getUsers(@NotNull Integer forum_id, @NotNull Integer limit,
+    public List<User> getUsers(@NotNull Long forum_id, @NotNull Integer limit,
                                @NotNull String since, @NotNull Boolean desc) {
         try {
             final List<Object> parametersSQL = new ArrayList<>();
@@ -73,12 +73,12 @@ public class ForumDAO {
         @Override
         public Forum mapRow(ResultSet resultSet, int i) throws SQLException {
             final Forum forum = new Forum();
-            forum.setId(resultSet.getInt("id"));
+            forum.setId(resultSet.getLong("id"));
             forum.setTitle(resultSet.getString("title"));
             forum.setUser(resultSet.getString("user"));
             forum.setSlug(resultSet.getString("slug"));
-            forum.setThreads(resultSet.getInt("threads"));
-            forum.setPosts(resultSet.getInt("posts"));
+            forum.setThreads(resultSet.getLong("threads"));
+            forum.setPosts(resultSet.getLong("posts"));
 
             return forum;
         }

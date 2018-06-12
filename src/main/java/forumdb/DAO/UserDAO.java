@@ -45,7 +45,7 @@ public class UserDAO {
             if (conditionEmail) {
                 sql.append(',');
             }
-            sql.append(" about='").append(about).append("'");
+            sql.append(" about='").append(about).append("'::citext");
         }
 
         if (conditionFullname) {
@@ -80,7 +80,7 @@ public class UserDAO {
             user.setNickname(resultSet.getString("nickname"));
             user.setFullname(resultSet.getString("fullname"));
             user.setAbout(resultSet.getString("about"));
-            user.setId(resultSet.getInt("id"));
+            user.setId(resultSet.getLong("id"));
 
             if (resultSet.wasNull()) {
                 user.setAbout(null);
