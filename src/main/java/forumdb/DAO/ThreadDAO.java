@@ -19,7 +19,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 
-@Transactional(isolation = Isolation.READ_COMMITTED)
+//@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ThreadDAO {
     @Autowired
@@ -143,6 +143,7 @@ public class ThreadDAO {
             thread.setCreated(resultSet.getTimestamp("created"));
             thread.setId(resultSet.getInt("id"));
             thread.setVotes(resultSet.getInt("votes"));
+            thread.setForumID(resultSet.getInt("forum_id"));
 
             return thread;
         }

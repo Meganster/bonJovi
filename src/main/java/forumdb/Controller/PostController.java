@@ -73,6 +73,7 @@ public class PostController {
                     isRoot = true;
                     post.setParent(0);
                 }
+                post.setForumID(thread.getForumID());
 
                 final Integer postID = postService.createPost(post);
                 post.setId(postID);

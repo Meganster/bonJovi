@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 
-@Transactional(isolation = Isolation.READ_COMMITTED)
+//@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class UserDAO {
     static final Integer EMPTY_SQL_STRING_LENGTH = 17;
@@ -62,12 +62,12 @@ public class UserDAO {
     }
 
     public User getUser(@NotNull String nickname) throws DataAccessException {
-        return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::citext;",
+        return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::CITEXT;",
                 new Object[]{nickname}, new UserMapper());
     }
 
     public ArrayList<User> getUsers(@NotNull String nickname, @NotNull String email) throws DataAccessException {
-        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::citext OR nickname = ?::citext;",
+        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::CITEXT OR nickname = ?::CITEXT;",
                 new Object[]{email, nickname}, new UserMapper());
     }
 
@@ -82,6 +82,9 @@ public class UserDAO {
             user.setAbout(resultSet.getString("about"));
             user.setId(resultSet.getInt("id"));
 
+            if (resultSet.wasNull()) {
+                user.setAbout(null);
+            }
             return user;
         }
     }

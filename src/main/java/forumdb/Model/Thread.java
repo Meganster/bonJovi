@@ -12,6 +12,7 @@ public class Thread {
     private String title;
     private String slug;
     private Integer votes;
+    private Integer forum_id;
 
     public Integer getId() {
         return id;
@@ -75,5 +76,13 @@ public class Thread {
 
     public void setCreated(Timestamp created) {
         this.created = created.toInstant().toString();
+    }
+
+    public Integer getForumID() {
+        return forum_id;
+    }
+
+    public void setForumID(Integer forum_id) {
+        this.forum_id = forum_id;
     }
 }

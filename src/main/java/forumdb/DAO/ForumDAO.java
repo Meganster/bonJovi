@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@Transactional(isolation = Isolation.READ_COMMITTED)
+//@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ForumDAO {
 

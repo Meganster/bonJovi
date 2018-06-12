@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-@Transactional(isolation = Isolation.READ_COMMITTED)
+//@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class PostDAO {
     @Autowired
@@ -30,8 +30,8 @@ public class PostDAO {
 
         jdbcTemplate.update(con -> {
             final PreparedStatement pst = con.prepareStatement(
-                    "INSERT INTO Post(created, forum, thread, author, parent, message) "
-                            + "VALUES (?::timestamptz, ?, ?, ?, ?, ?) returning id",
+                    "INSERT INTO Post(created, forum, thread, author, parent, message, forum_id) "
+                            + "VALUES (?::timestamptz, ?, ?, ?, ?, ?, ?) returning id",
                     PreparedStatement.RETURN_GENERATED_KEYS);
             pst.setString(1, post.getCreated());
             pst.setString(2, post.getForum());
@@ -39,6 +39,7 @@ public class PostDAO {
             pst.setString(4, post.getAuthor());
             pst.setInt(5, post.getParent());
             pst.setString(6, post.getMessage());
+            pst.setInt(7, post.getForumID());
 
             return pst;
         }, keyHolder);
@@ -219,6 +220,7 @@ public class PostDAO {
             post.setIsEdited(resultSet.getBoolean("isEdited"));
             post.setParent(resultSet.getInt("parent"));
             post.setId(resultSet.getInt("id"));
+            post.setForumID(resultSet.getInt("forum_id"));
 
             try {
                 post.setPath((Object[]) resultSet.getArray("path").getArray());

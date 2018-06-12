@@ -12,6 +12,7 @@ public class Post {
     private String message;
     private Integer parent;
     private Integer thread;
+    private Integer forum_id;
     private Object[] path;
 
     public Integer getId() {
@@ -46,6 +47,10 @@ public class Post {
         return created;
     }
 
+    public Integer getForumID() {
+        return forum_id;
+    }
+
 
     public void setAuthor(String author) {
         this.author = author;
@@ -78,6 +83,11 @@ public class Post {
     public void setCreated(Timestamp created) {
         this.created = created.toInstant().toString();
     }
+
+    public void setForumID(Integer forum_id) {
+        this.forum_id = forum_id;
+    }
+
 
     public Object[] getPath() {
         return path;

@@ -110,9 +110,6 @@ CREATE OR REPLACE FUNCTION increment_forum_posts_procedure()
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  new.forum_id = (SELECT id
-                 FROM Forum
-                 WHERE Forum.slug=new.forum);
   UPDATE Forum
   SET posts = posts + 1
   WHERE forum.id = new.forum_id;
@@ -194,7 +191,7 @@ CREATE UNIQUE INDEX Vote_user_thread
   ON UserVoteForThreads (user_id, thread_id);
 
 CREATE INDEX Post_threadID_path
-  ON Post (thread, (path [1]));
+  ON Post (thread, (path[1]));
 
 CREATE UNIQUE INDEX Forum_slug_id
   ON Forum (slug, id);
