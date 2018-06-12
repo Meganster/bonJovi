@@ -60,9 +60,9 @@ CREATE TABLE UserVoteForThreads (
 
 CREATE TABLE ForumUsers (
   id  SERIAL PRIMARY KEY,
-  email CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
+  email CITEXT COLLATE "ucs_basic" NOT NULL,
   fullname VARCHAR(256) NOT NULL,
-  nickname CITEXT COLLATE "ucs_basic" UNIQUE NOT NULL,
+  nickname CITEXT COLLATE "ucs_basic" NOT NULL,
   about CITEXT,
   forum_id INTEGER,
   UNIQUE (forum_id, nickname)
