@@ -54,7 +54,7 @@ public class ForumController {
     @GetMapping(value = "api/forum/{slug}/threads")
     public ResponseEntity<?> getThreads(@PathVariable("slug") String forumSlug,
                                         @RequestParam(value = "since", defaultValue = "") String since,
-                                        @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                        @RequestParam(value = "limit", defaultValue = "0") Long limit,
                                         @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
         try {
             forumService.getForum(forumSlug);
@@ -67,7 +67,7 @@ public class ForumController {
 
     @GetMapping(value = "api/forum/{slug}/users")
     public ResponseEntity<?> getUsers(@PathVariable String slug,
-                                      @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                      @RequestParam(value = "limit", defaultValue = "0") Long limit,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc,
                                       @RequestParam(value = "since", defaultValue = "") String since) {
         final Forum forum;

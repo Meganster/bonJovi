@@ -35,11 +35,11 @@ public class ForumDAO {
                 new Object[]{slug}, new ForumMapper());
     }
 
-    public List<User> getUsers(@NotNull Long forum_id, @NotNull Integer limit,
+    public List<User> getUsers(@NotNull Long forum_id, @NotNull Long limit,
                                @NotNull String since, @NotNull Boolean desc) {
         try {
             final List<Object> parametersSQL = new ArrayList<>();
-            final StringBuilder sql = new StringBuilder("SELECT id, nickname, fullname, email, about FROM ForumUsers WHERE forum_id = ? ");
+            final StringBuilder sql = new StringBuilder("SELECT id, nickname, fullname, email, about FROM ForumUsers WHERE forum_id=? ");
             parametersSQL.add(forum_id);
 
             if (!since.isEmpty()) {

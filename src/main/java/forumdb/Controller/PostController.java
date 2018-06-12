@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.lang.Error;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -58,6 +59,7 @@ public class PostController {
                 post.setForum(forum.getSlug());
                 post.setThread(thread.getId());
                 post.setCreated(currentTime);
+                post.setForumID(thread.getForumID());
 
                 try {
                     userService.getUser(post.getAuthor());
@@ -73,7 +75,6 @@ public class PostController {
                     isRoot = true;
                     post.setParent(0L);
                 }
-                post.setForumID(thread.getForumID());
 
                 final Long postID = postService.createPost(post);
                 post.setId(postID);
@@ -120,21 +121,33 @@ public class PostController {
         final PostDetails postDetails = new PostDetails(post);
         if (related == null) {
             return ResponseEntity.status(HttpStatus.OK).body(postDetails);
-        }
-
-        for (String key : related) {
-            if (key.equals("user")) {
+        } else {
+            if (Arrays.asList(related).contains("user")) {
                 postDetails.setAuthor(userService.getUser(post.getAuthor()));
             }
 
-            if (key.equals("thread")) {
+            if (Arrays.asList(related).contains("thread")) {
                 postDetails.setThread(threadService.getThreadByID(post.getThread()));
             }
 
-            if (key.equals("forum")) {
+            if (Arrays.asList(related).contains("forum")) {
                 postDetails.setForum(forumService.getForum(post.getForum()));
             }
         }
+
+//        for (String key : related) {
+//            if (key.equals("user")) {
+//                postDetails.setAuthor(userService.getUser(post.getAuthor()));
+//            }
+//
+//            if (key.equals("thread")) {
+//                postDetails.setThread(threadService.getThreadByID(post.getThread()));
+//            }
+//
+//            if (key.equals("forum")) {
+//                postDetails.setForum(forumService.getForum(post.getForum()));
+//            }
+//        }
 
         return ResponseEntity.status(HttpStatus.OK).body(postDetails);
     }
@@ -142,7 +155,7 @@ public class PostController {
     @GetMapping(value = "api/thread/{slug_or_id}/posts")
     public ResponseEntity<?> getPosts(@PathVariable("slug_or_id") String slugOrId,
                                       @RequestParam(value = "since", defaultValue = "0") Long since,
-                                      @RequestParam(value = "limit", defaultValue = "0") Integer limit,
+                                      @RequestParam(value = "limit", defaultValue = "0") Long limit,
                                       @RequestParam(value = "sort", defaultValue = "flat") String sort,
                                       @RequestParam(value = "desc", defaultValue = "false") Boolean desc) {
 

@@ -102,7 +102,7 @@ public class PostDAO {
     }
 
     public List<Post> getFlatSortForPosts(@NotNull Long threadID, @NotNull Long since,
-                                          @NotNull Integer limit, @NotNull Boolean desc) {
+                                          @NotNull Long limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID);
 
         if (since > 0) {
@@ -128,7 +128,7 @@ public class PostDAO {
     }
 
     public List<Post> getTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
-                                          @NotNull Integer limit, @NotNull Boolean desc) {
+                                          @NotNull Long limit, @NotNull Boolean desc) {
         List<Object> myObj = new ArrayList<>();
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID);
         myObj.add(threadID);
@@ -156,7 +156,7 @@ public class PostDAO {
     }
 
     public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
-                                                @NotNull Integer limit, @NotNull Boolean desc) {
+                                                @NotNull Long limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post JOIN ");
 
         if (since > 0) {

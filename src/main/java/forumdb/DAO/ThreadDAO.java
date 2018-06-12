@@ -50,7 +50,7 @@ public class ThreadDAO {
     }
 
     public List<Thread> getThreads(@NotNull String slugForum,
-                                   @NotNull Integer limit, @NotNull String since, @NotNull Boolean desc) {
+                                   @NotNull Long limit, @NotNull String since, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Thread WHERE forum = '" + slugForum + "'::citext");
         if (!since.isEmpty()) {
             if (desc == true) {
