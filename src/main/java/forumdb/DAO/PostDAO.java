@@ -155,51 +155,107 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
+    //    public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
+//                                                @NotNull Long limit, @NotNull Boolean desc) {
+//        final StringBuilder sql = new StringBuilder("SELECT * FROM Post JOIN ");
+//
+//        if (since > 0) {
+//            if (desc == true) {
+//                if(limit > 0) {
+//                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
+//                            .append(" AND path[1] < (SELECT path[1] FROM Post WHERE id=").append(since)
+//                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
+//                            .append(") as TT ON thread=").append(threadID)
+//                            .append(" and path[1] = TT.id ");
+//                } else {
+//                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
+//                            .append(" and path < (SELECT path FROM Post WHERE id=").append(since)
+//                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
+//                            .append(") as TT ON thread=").append(threadID)
+//                            .append(" and path[1] = TT.id ");
+//                }
+//            } else {
+//                sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
+//                        .append(" and path > (SELECT path FROM Post WHERE id=").append(since)
+//                        .append(") ORDER BY path, thread  LIMIT ").append(limit)
+//                        .append(") as TT ON thread=").append(threadID)
+//                        .append(" and path[1] = TT.id ");
+//            }
+//        } else if (limit > 0) {
+//            if (desc) {
+//                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
+//                        .append(" ORDER BY path DESC, thread DESC LIMIT ").append(limit).append(") as TT ON thread=")
+//                        .append(threadID).append(" AND path[1]=TT.id ");
+//            } else {
+//                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
+//                        .append(" ORDER BY path, thread LIMIT ").append(limit).append(") as TT ON thread=")
+//                        .append(threadID).append(" AND path[1]=TT.id ");
+//            }
+//        }
+//
+//        sql.append(" ORDER BY path");
+//
+//        if (desc == true && since == 0) {
+//            sql.append("[1] DESC");
+//
+//            if (limit > 0) {
+//                sql.append(", path");
+//            }
+//        }
+//        sql.append(';');
+//
+//        return jdbcTemplate.query(sql.toString(), new PostMapper());
+//    }
     public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                                 @NotNull Long limit, @NotNull Boolean desc) {
-        final StringBuilder sql = new StringBuilder("SELECT * FROM Post JOIN ");
+        final StringBuilder sql = new StringBuilder("WITH RECURSIVE recursivetree (id, mypath) AS (" +
+                " SELECT id, array_append('{}'::INTEGER[], id) FROM" +
+                " (SELECT DISTINCT id FROM Post" +
+                " WHERE thread=" + threadID +
+                " AND parent=0 ORDER BY id");
+
+        if (desc == true && !(limit > 0 && since > 0)) {
+            sql.append(" DESC");
+        }
+
+        if (limit > 0) {
+            if (!desc && since > 0) {
+                sql.append(" DESC");
+            }
+
+            sql.append(" LIMIT ").append(limit);
+        }
+
+        sql.append(") superParents UNION ALL " +
+                "SELECT P.id, array_append(mypath, P.id) FROM Post AS P " +
+                "JOIN recursivetree AS R ON R.id=P.parent) " +
+                "SELECT P.* FROM recursivetree JOIN Post AS P ON recursivetree.id=P.id");
 
         if (since > 0) {
-            if (desc == true) {
-                if(limit > 0) {
-                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                            .append(" AND path[1] < (SELECT path[1] FROM Post WHERE id=").append(since)
-                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
-                            .append(") as TT ON thread=").append(threadID)
-                            .append(" and path[1] = TT.id ");
+            if (desc) {
+                if (limit > 0) {
+                    sql.append(" WHERE P.thread=").append(threadID).append(" AND recursivetree.mypath[1]").append('<')
+                            .append("(SELECT recursivetree.mypath[1] FROM recursivetree WHERE recursivetree.id=").append(since)
+                            .append(')');
                 } else {
-                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                            .append(" and path < (SELECT path FROM Post WHERE id=").append(since)
-                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
-                            .append(") as TT ON thread=").append(threadID)
-                            .append(" and path[1] = TT.id ");
+                    sql.append(" WHERE P.thread=").append(threadID).append(" AND recursivetree.mypath").append('<')
+                            .append("(SELECT recursivetree.mypath FROM recursivetree WHERE recursivetree.id=").append(since)
+                            .append(')');
                 }
             } else {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                        .append(" and path > (SELECT path FROM Post WHERE id=").append(since)
-                        .append(") ORDER BY path, thread  LIMIT ").append(limit)
-                        .append(") as TT ON thread=").append(threadID)
-                        .append(" and path[1] = TT.id ");
-            }
-        } else if (limit > 0) {
-            if (desc) {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
-                        .append(" ORDER BY path DESC, thread DESC LIMIT ").append(limit).append(") as TT ON thread=")
-                        .append(threadID).append(" AND path[1]=TT.id ");
-            } else {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
-                        .append(" ORDER BY path, thread LIMIT ").append(limit).append(") as TT ON thread=")
-                        .append(threadID).append(" AND path[1]=TT.id ");
+                sql.append(" WHERE P.thread=").append(threadID).append(" AND recursivetree.mypath").append('>')
+                        .append("(SELECT recursivetree.mypath FROM recursivetree WHERE recursivetree.id=").append(since)
+                        .append(')');
             }
         }
 
-        sql.append(" ORDER BY path");
+        sql.append(" ORDER BY recursivetree.mypath");
 
         if (desc == true && since == 0) {
             sql.append("[1] DESC");
 
             if (limit > 0) {
-                sql.append(", path");
+                sql.append(", recursivetree.mypath");
             }
         }
         sql.append(';');
