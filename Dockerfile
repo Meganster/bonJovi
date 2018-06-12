@@ -41,7 +41,7 @@ EXPOSE 5432
 VOLUME /etc/postgresql /var/log/postgresql /var/lib/postgresql
 USER root
 RUN apt-get install -y openjdk-9-jdk-headless
-RUN apt-get update -y
+#RUN apt-get update -y
 RUN apt-get install -y maven
 
 ENV WORK /opt/
