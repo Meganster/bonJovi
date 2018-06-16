@@ -38,16 +38,16 @@ CREATE TABLE Thread (
 );
 
 CREATE TABLE Post (
-  id SERIAL PRIMARY KEY,
-  created TIMESTAMPTZ DEFAULT now(),
+  id SERIAL NOT NULL PRIMARY KEY,
+  created TIMESTAMPTZ DEFAULT NOW(),
   forum CITEXT REFERENCES Forum (slug) ON DELETE CASCADE,
   thread INTEGER REFERENCES Thread (id) ON DELETE CASCADE,
   author CITEXT COLLATE "ucs_basic" REFERENCES "User" (nickname) ON DELETE CASCADE,
-  parent INTEGER DEFAULT 0,
+  parent INTEGER,
   message TEXT,
-  isEdited BOOLEAN DEFAULT FALSE,
+  isEdited BOOLEAN,
   forum_id  INTEGER,  -- нужно для инкрементов
-  path INT []
+  path INTEGER []
 );
 
 CREATE TABLE UserVoteForThreads (

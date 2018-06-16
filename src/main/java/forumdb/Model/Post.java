@@ -1,7 +1,5 @@
 package forumdb.Model;
 
-import java.sql.Timestamp;
-
 
 public class Post {
     private String author;
@@ -80,8 +78,8 @@ public class Post {
         this.thread = thread;
     }
 
-    public void setCreated(Timestamp created) {
-        this.created = created.toInstant().toString();
+    public void setCreated(String created) {
+        this.created = created;
     }
 
     public void setForumID(Long forum_id) {

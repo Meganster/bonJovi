@@ -29,9 +29,10 @@ public class PostController {
     @Autowired
     ThreadDAO threadService;
 
+    public static final Long MAX_LONG = 2000000L;
+
     @PostMapping(value = "/api/thread/{slug_or_id}/create")
     public ResponseEntity<?> createPosts(@PathVariable("slug_or_id") String slugOrId, @RequestBody List<Post> posts) {
-
         Thread thread;
         try {
             final Long threadID = Long.parseLong(slugOrId);
@@ -40,56 +41,20 @@ public class PostController {
             thread = threadService.getThreadBySlug(slugOrId);
         }
 
-        if (thread == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
-        }
+        if (thread != null) {
+            try {
+                posts = postService.CreatePosts(posts, thread);
 
-
-        try {
-            final Forum forum = forumService.getForum(thread.getForum());
-            final Timestamp currentTime = new Timestamp(System.currentTimeMillis());
-
-            for (Post post : posts) {
-                if (post.getForum() != null) {
-                    if (!post.getForum().equals(thread.getForum())) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(postService.getPostBySlugForum(thread.getForum()));
-                    }
-                }
-
-                post.setForum(forum.getSlug());
-                post.setThread(thread.getId());
-                post.setCreated(currentTime);
-                post.setForumID(thread.getForumID());
-
-                try {
-                    userService.getUser(post.getAuthor());
-                } catch (DataAccessException e) {
+                if (posts == null) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
-                }
-
-                final Long parentId = post.getParent();
-                Boolean isRoot = false;
-                if (parentId != null && !parentId.equals(0)) {
-                    postService.getParentPost(parentId, thread.getId());
                 } else {
-                    isRoot = true;
-                    post.setParent(0L);
+                    return ResponseEntity.status(HttpStatus.CREATED).body(posts);
                 }
-
-                final Long postID = postService.createPost(post);
-                post.setId(postID);
-
-                if (isRoot == true) {
-                    postService.addPostToPathSelf(post);
-                } else {
-                    final Post parentPost = postService.getPostById(post.getParent());
-                    postService.addPostToPath(parentPost, post);
-                }
+            } catch (RuntimeException error) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
             }
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(posts);
-        } catch (DataAccessException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new Error("Parent post was created in another thread"));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));
         }
     }
 
@@ -113,7 +78,6 @@ public class PostController {
         final Post post;
         try {
             post = postService.getPostById(id);
-
         } catch (DataAccessException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post with id: " + id));
         }
@@ -134,20 +98,6 @@ public class PostController {
                 postDetails.setForum(forumService.getForum(post.getForum()));
             }
         }
-
-//        for (String key : related) {
-//            if (key.equals("user")) {
-//                postDetails.setAuthor(userService.getUser(post.getAuthor()));
-//            }
-//
-//            if (key.equals("thread")) {
-//                postDetails.setThread(threadService.getThreadByID(post.getThread()));
-//            }
-//
-//            if (key.equals("forum")) {
-//                postDetails.setForum(forumService.getForum(post.getForum()));
-//            }
-//        }
 
         return ResponseEntity.status(HttpStatus.OK).body(postDetails);
     }
@@ -177,10 +127,30 @@ public class PostController {
         }
 
         if (sort.equals("tree")) {
+            if (limit == 0) {
+                limit = MAX_LONG;
+            }
+
+            if (since == 0) {
+                if (desc == true) {
+                    since = MAX_LONG;
+                }
+            }
+
             resultPosts = postService.getTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
         if (sort.equals("parent_tree")) {
+            if (limit == 0) {
+                limit = MAX_LONG;
+            }
+
+            if (since == 0) {
+                if (desc == true) {
+                    since = MAX_LONG;
+                }
+            }
+
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 

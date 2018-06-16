@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 
-//@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ServiceDAO {
     @Autowired
@@ -27,6 +27,6 @@ public class ServiceDAO {
     }
 
     public void clear() throws DataAccessException {
-        jdbcTemplate.update("TRUNCATE ForumUsers, \"User\", Forum, Thread, Post, UserVoteForThreads CASCADE;");
+        jdbcTemplate.update("TRUNCATE \"User\", Forum, Thread, Post, UserVoteForThreads CASCADE;");
     }
 }
