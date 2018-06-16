@@ -29,8 +29,6 @@ public class PostController {
     @Autowired
     ThreadDAO threadService;
 
-    public static final Long MAX_LONG = 2000000L;
-
     @PostMapping(value = "/api/thread/{slug_or_id}/create")
     public ResponseEntity<?> createPosts(@PathVariable("slug_or_id") String slugOrId, @RequestBody List<Post> posts) {
         Thread thread;
@@ -127,30 +125,10 @@ public class PostController {
         }
 
         if (sort.equals("tree")) {
-            if (limit == 0) {
-                limit = MAX_LONG;
-            }
-
-            if (since == 0) {
-                if (desc == true) {
-                    since = MAX_LONG;
-                }
-            }
-
             resultPosts = postService.getTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 
         if (sort.equals("parent_tree")) {
-            if (limit == 0) {
-                limit = MAX_LONG;
-            }
-
-            if (since == 0) {
-                if (desc == true) {
-                    since = MAX_LONG;
-                }
-            }
-
             resultPosts = postService.getParentTreeSortForPosts(thread.getId(), since, limit, desc);
         }
 

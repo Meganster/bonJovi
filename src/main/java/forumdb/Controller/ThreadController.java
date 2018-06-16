@@ -50,7 +50,7 @@ public class ThreadController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(thread);
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//threadService.getThreadBySlug(thread.getSlug()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(threadService.getThreadBySlug(thread.getSlug()));
         }
     }
 
