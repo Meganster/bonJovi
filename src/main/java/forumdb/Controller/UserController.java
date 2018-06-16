@@ -24,7 +24,7 @@ public class UserController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(userTemplate.getUser(nickname));
         } catch (DataAccessException error) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(userTemplate.getUsers(nickname, user.getEmail()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//userTemplate.getUsers(nickname, user.getEmail()));
         }
     }
 

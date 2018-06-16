@@ -47,9 +47,9 @@ public class ForumDAO {
 
             if (!since.isEmpty()) {
                 if (desc == true) {
-                    sql.append(" AND nickname < ?::citext ");
+                    sql.append(" AND nickname<?::citext ");
                 } else {
-                    sql.append(" AND nickname > ?::citext ");
+                    sql.append(" AND nickname>?::citext ");
                 }
 
                 parametersSQL.add(since);

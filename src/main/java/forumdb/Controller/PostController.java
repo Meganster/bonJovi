@@ -43,7 +43,7 @@ public class PostController {
 
         if (thread != null) {
             try {
-                posts = postService.CreatePosts(posts, thread);
+                posts = postService.CreatePostsFromList(posts, thread);
 
                 if (posts == null) {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Error("Can't find post thread by id " + slugOrId));

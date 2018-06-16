@@ -29,7 +29,7 @@ public class ForumController {
     public ResponseEntity<?> createForum(@RequestBody Forum forum) {
         try {
             final Forum existForum = forumService.getForum(forum.getSlug());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(existForum);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error");//existForum);
         } catch (DataAccessException error) {
             try {
                 final User existUser = userService.getUser(forum.getUser());

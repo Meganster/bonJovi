@@ -52,12 +52,12 @@ public class ThreadDAO {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Thread> getThreads(@NotNull String slugForum,
                                    @NotNull Long limit, @NotNull String since, @NotNull Boolean desc) {
-        final StringBuilder sql = new StringBuilder("SELECT * FROM Thread WHERE forum = '" + slugForum + "'::citext");
+        final StringBuilder sql = new StringBuilder("SELECT * FROM Thread WHERE forum='" + slugForum + "'::citext");
         if (!since.isEmpty()) {
             if (desc == true) {
-                sql.append(" AND created <= '").append(since).append("'::timestamptz");
+                sql.append(" AND created<='").append(since).append("'::timestamptz");
             } else {
-                sql.append(" AND created >= '").append(since).append("'::timestamptz");
+                sql.append(" AND created>='").append(since).append("'::timestamptz");
             }
         }
 
@@ -95,11 +95,14 @@ public class ThreadDAO {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void vote(Thread thread, Vote vote) {
-            final String sql = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) " +
-                    "SELECT( SELECT id FROM \"User\" WHERE nickname=?) AS uid, " +
-                    "?, ? ON CONFLICT (user_id, thread_id) " +
-                    "DO UPDATE SET vote = EXCLUDED.vote;";
-            jdbcTemplate.update(sql, vote.getNickname(), thread.getId(), vote.getVoice());
+            final StringBuilder sql = new StringBuilder("INSERT INTO UserVoteForThreads (user_id, thread_id, vote) ");
+            sql.append("SELECT( SELECT id FROM \"User\" WHERE nickname='").append(vote.getNickname())
+                    .append("') AS uid, ")
+                    .append(thread.getId())
+                    .append(", ")
+                    .append(vote.getVoice())
+                    .append(" ON CONFLICT (user_id, thread_id) DO UPDATE SET vote=EXCLUDED.vote;");
+            jdbcTemplate.update(sql.toString());
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
