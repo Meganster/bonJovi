@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 
-@Transactional(isolation = Isolation.READ_COMMITTED)
 @Repository
 public class ServiceDAO {
     @Autowired

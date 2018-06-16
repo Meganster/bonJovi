@@ -17,24 +17,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-//@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 @Repository
 public class ForumDAO {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void create(@NotNull String title, @NotNull String user,
                        @NotNull String slug) throws DataAccessException {
         jdbcTemplate.update("INSERT INTO Forum (title, \"user\", slug) VALUES (?, ?, ?);",
                 title, user, slug);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Forum getForum(@NotNull String slug) throws DataAccessException {
         return jdbcTemplate.queryForObject("SELECT * FROM Forum WHERE slug = ?::citext;",
                 new Object[]{slug}, new ForumMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<User> getUsers(@NotNull Long forum_id, @NotNull Long limit,
                                @NotNull String since, @NotNull Boolean desc) {
         try {

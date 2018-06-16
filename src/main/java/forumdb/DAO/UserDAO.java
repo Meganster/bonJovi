@@ -15,7 +15,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 
-//@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 @Repository
 public class UserDAO {
     static final Integer EMPTY_SQL_STRING_LENGTH = 17;
@@ -23,12 +23,14 @@ public class UserDAO {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void create(@NotNull String email, @NotNull String nickname,
                        @NotNull String fullname, @NotNull String about) throws DataAccessException {
         jdbcTemplate.update("INSERT INTO \"User\" (email, nickname, fullname, about) VALUES (?, ?, ?, ?);",
                 email, nickname, fullname, about);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void updateProfile(@NotNull String email, @NotNull String fullname,
                               @NotNull String about, @NotNull String nickname) throws DataAccessException {
         final Boolean conditionEmail = email != null && !email.isEmpty();
@@ -61,18 +63,19 @@ public class UserDAO {
         }
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public User getUser(@NotNull String nickname) throws DataAccessException {
         return jdbcTemplate.queryForObject("SELECT * FROM \"User\" WHERE nickname = ?::CITEXT;",
                 new Object[]{nickname}, new UserMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public ArrayList<User> getUsers(@NotNull String nickname, @NotNull String email) throws DataAccessException {
         return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM \"User\" WHERE email = ?::CITEXT OR nickname = ?::CITEXT;",
                 new Object[]{email, nickname}, new UserMapper());
     }
 
     public static class UserMapper implements RowMapper<User> {
-
         @Override
         public User mapRow(ResultSet resultSet, int i) throws SQLException {
             final User user = new User();

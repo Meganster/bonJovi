@@ -22,7 +22,7 @@ import java.util.TimeZone;
 import static forumdb.Controller.PostController.MAX_LONG;;
 
 
-//@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 @Repository
 public class PostDAO {
     @Autowired
@@ -30,10 +30,12 @@ public class PostDAO {
     @Autowired
     UserDAO userService;
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Array getPathById(Long id) {
         return jdbcTemplate.queryForObject("SELECT path FROM Post WHERE id = ?;", Array.class, id);
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Long generateID() {
         return jdbcTemplate.queryForObject("SELECT nextval(pg_get_serial_sequence('Post', 'id'))", Long.class);
     }
@@ -111,6 +113,7 @@ public class PostDAO {
 //        return jdbcTemplate.query(sql.toString(), new PostMapper());
 //    }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Post getPostById(@NotNull Long id) {
         final StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM Post WHERE id = ").append(id).append(";");
@@ -118,6 +121,7 @@ public class PostDAO {
         return jdbcTemplate.queryForObject(sql.toString(), new PostMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void update(@NotNull Post post, @NotNull Post changedPost) {
         final String message = changedPost.getMessage();
         if (message == null || message.isEmpty() || message.equals(post.getMessage())) {
@@ -127,6 +131,7 @@ public class PostDAO {
         jdbcTemplate.update("UPDATE Post SET message = ?, isEdited = TRUE WHERE id = ?;", message, post.getId());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Post> getFlatSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                           @NotNull Long limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=" + threadID);
@@ -153,6 +158,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Post> getTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                           @NotNull Long limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=? ");
@@ -179,6 +185,7 @@ public class PostDAO {
         return jdbcTemplate.query(sql.toString(), new Object[]{threadID, since, limit}, new PostMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                                 @NotNull Long limit, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread = ? AND path[1] IN (SELECT DISTINCT path[1] FROM Post ");

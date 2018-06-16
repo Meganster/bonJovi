@@ -19,14 +19,14 @@ import java.sql.SQLException;
 import java.util.List;
 
 
-//@Transactional(isolation = Isolation.READ_COMMITTED)
+@Transactional
 @Repository
 public class ThreadDAO {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
 
-    //@Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Long createThread(@NotNull Thread thread) throws DataAccessException {
         final GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -49,6 +49,7 @@ public class ThreadDAO {
         return keyHolder.getKey().longValue();
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Thread> getThreads(@NotNull String slugForum,
                                    @NotNull Long limit, @NotNull String since, @NotNull Boolean desc) {
         final StringBuilder sql = new StringBuilder("SELECT * FROM Thread WHERE forum = '" + slugForum + "'::citext");
@@ -72,6 +73,7 @@ public class ThreadDAO {
         return jdbcTemplate.query(sql.toString(), new ThreadMapper());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Thread getThreadByID(@NotNull Long id) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE id = ?;",
@@ -81,6 +83,7 @@ public class ThreadDAO {
         }
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public Thread getThreadBySlug(@NotNull String slug) {
         try {
             return jdbcTemplate.queryForObject("SELECT * FROM Thread WHERE slug = ?::citext;",
@@ -90,7 +93,7 @@ public class ThreadDAO {
         }
     }
 
-    //@Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void vote(Thread thread, Vote vote) {
             final String sql = "INSERT INTO UserVoteForThreads (user_id, thread_id, vote) " +
                     "SELECT( SELECT id FROM \"User\" WHERE nickname=?) AS uid, " +
@@ -99,6 +102,7 @@ public class ThreadDAO {
             jdbcTemplate.update(sql, vote.getNickname(), thread.getId(), vote.getVoice());
     }
 
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public void update(@NotNull Long threadID, @NotNull Thread changedThread) {
         final StringBuilder sql = new StringBuilder("UPDATE Thread");
 
