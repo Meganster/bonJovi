@@ -16,10 +16,10 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import static forumdb.Controller.PostController.MAX_LONG;
 
 
 //@Transactional
@@ -159,28 +159,26 @@ public class PostDAO {
     //@Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Post> getTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                           @NotNull Long limit, @NotNull Boolean desc) {
-        List<Object> myObj = new ArrayList<>();
         final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID);
-        myObj.add(threadID);
-
-        if (since > 0) {
-            if (desc == true) {
-                sql.append(" AND path < (SELECT path FROM Post WHERE id=").append(since).append(") ");
-            } else {
-                sql.append(" AND path > (SELECT path FROM Post WHERE id=").append(since).append(") ");
-            }
-
-            myObj.add(since);
-        }
-        sql.append(" ORDER BY path ");
 
         if (desc == true) {
-            sql.append(" DESC, id DESC ");
-        }
+            if (since != 0 && !since.equals(MAX_LONG)) {
+                sql.append("AND path<(SELECT path FROM Post WHERE id=").append(since).append(") ");
+            } else {
+                sql.append("AND path[1]<").append(since).append(" ");
+            }
 
-        if (limit > 0) {
-            sql.append(" LIMIT ").append(limit).append(";");
+            sql.append("ORDER BY path DESC ");
+        } else {
+            if (since != 0 && !since.equals(MAX_LONG)) {
+                sql.append("AND path>(SELECT path FROM Post WHERE id=").append(since).append(") ");
+            } else {
+                sql.append("AND path[1]>").append(since).append(" ");
+            }
+
+            sql.append(" ORDER BY path");
         }
+        sql.append(" LIMIT ").append(limit).append(';');
 
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
@@ -188,52 +186,35 @@ public class PostDAO {
     //@Transactional(isolation = Isolation.READ_COMMITTED)
     public List<Post> getParentTreeSortForPosts(@NotNull Long threadID, @NotNull Long since,
                                                 @NotNull Long limit, @NotNull Boolean desc) {
-        final StringBuilder sql = new StringBuilder("SELECT * FROM Post JOIN ");
+        final StringBuilder sql = new StringBuilder("SELECT * FROM Post WHERE thread=").append(threadID)
+                .append(" AND path[1] IN (SELECT DISTINCT path[1] FROM Post ");
 
-        if (since > 0) {
-            if (desc == true) {
-                if(limit > 0) {
-                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                            .append(" AND path[1] < (SELECT path[1] FROM Post WHERE id=").append(since)
-                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
-                            .append(") as TT ON thread=").append(threadID)
-                            .append(" and path[1] = TT.id ");
-                } else {
-                    sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                            .append(" and path < (SELECT path FROM Post WHERE id=").append(since)
-                            .append(") ORDER BY path DESC, thread DESC LIMIT ").append(limit)
-                            .append(") as TT ON thread=").append(threadID)
-                            .append(" and path[1] = TT.id ");
-                }
+        if (desc == true) {
+            if (since != 0 && !since.equals(MAX_LONG)) {
+                sql.append("WHERE thread=").append(threadID)
+                        .append(" AND path[1]<(SELECT path[1] FROM Post WHERE id=").append(since)
+                        .append(") ORDER BY path[1] DESC LIMIT ").append(limit)
+                        .append(") ORDER BY path[1] DESC ");
             } else {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 AND thread=").append(threadID)
-                        .append(" and path > (SELECT path FROM Post WHERE id=").append(since)
-                        .append(") ORDER BY path, thread  LIMIT ").append(limit)
-                        .append(") as TT ON thread=").append(threadID)
-                        .append(" and path[1] = TT.id ");
+                sql.append("WHERE thread=").append(threadID)
+                        .append(" AND path[1]<").append(since)
+                        .append(" ORDER BY path[1] DESC LIMIT ").append(limit)
+                        .append(") ORDER BY path[1] DESC ");
             }
-        } else if (limit > 0) {
-            if (desc) {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
-                        .append(" ORDER BY path DESC, thread DESC LIMIT ").append(limit).append(") as TT ON thread=")
-                        .append(threadID).append(" AND path[1]=TT.id ");
+        } else {
+            if (since != 0 && !since.equals(MAX_LONG)) {
+                sql.append(" WHERE thread=").append(threadID)
+                        .append(" AND path[1]>(SELECT path[1] FROM Post WHERE id=").append(since)
+                        .append(") ORDER BY path[1] LIMIT ").append(limit)
+                        .append(") ORDER BY path[1] ");
             } else {
-                sql.append(" (SELECT id FROM Post WHERE parent=0 and thread=").append(threadID)
-                        .append(" ORDER BY path, thread LIMIT ").append(limit).append(") as TT ON thread=")
-                        .append(threadID).append(" AND path[1]=TT.id ");
+                sql.append(" WHERE thread=").append(threadID)
+                        .append(" AND path[1]>").append(since)
+                        .append(" ORDER BY path[1] LIMIT ").append(limit)
+                        .append(") ORDER BY path[1]  ");
             }
         }
-
-        sql.append(" ORDER BY path");
-
-        if (desc == true && since == 0) {
-            sql.append("[1] DESC");
-
-            if (limit > 0) {
-                sql.append(", path");
-            }
-        }
-        sql.append(';');
+        sql.append(" , path;");
 
         return jdbcTemplate.query(sql.toString(), new PostMapper());
     }
